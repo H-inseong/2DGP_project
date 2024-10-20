@@ -3,8 +3,13 @@ from pico2d import *
 TUK_WIDTH, TUK_HEIGHT = 1280, 1024
 open_canvas(TUK_WIDTH, TUK_HEIGHT)
 #tuk_ground = load_image('TUK_GROUND.png')
-character = load_image('Sprite_Sheet.png')
+character_sheet = load_image('Sprite_Sheet.jpg')
+background_sheet = load_image('background_main.jpg')
+items_sheet = load_image('items_sheet.jpg')
 
+def get_sprite(sheet, frame, width, height):
+    sprite = sheet.clip_draw(frame * width, 0, width, height, 0, 0)
+    return sprite
 
 def handle_events():
     global running
