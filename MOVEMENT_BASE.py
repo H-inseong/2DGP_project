@@ -1,97 +1,148 @@
 from pico2d import *
 
-TUK_WIDTH, TUK_HEIGHT = 1280, 1024
-open_canvas(TUK_WIDTH, TUK_HEIGHT)
-#tuk_ground = load_image('TUK_GROUND.png')
-character_sheet = load_image('Sprite_Sheet.jpg')
-background_sheet = load_image('background_main.jpg')
-items_sheet = load_image('items_sheet.jpg')
+WIDTH, HEIGHT = 1920, 1080
 
-def get_sprite(sheet, frame, width, height):
-    sprite = sheet.clip_draw(frame * width, 0, width, height, 0, 0)
-    return sprite
-
-def handle_events():
-    global running
-    global dirx
-    global diry
-
-    events = get_events()
-    for event in events:
-        if event.type == SDL_QUIT:
-            running = False
-
-        elif event.type == SDL_KEYDOWN:
-            if event.key == SDLK_RIGHT:
-                dirx += 1
-            elif event.key == SDLK_LEFT:
-                dirx -= 1
-            elif event.key == SDLK_UP:
-                diry += 1
-            elif event.key == SDLK_DOWN:
-                diry -= 1
-            elif event.key == SDLK_ESCAPE:
-                running = False
-
-        elif event.type == SDL_KEYUP:
-            if event.key == SDLK_RIGHT:
-                dirx -= 1
-            elif event.key == SDLK_LEFT:
-                dirx += 1
-            elif event.key == SDLK_UP:
-                diry -= 1
-            elif event.key == SDLK_DOWN:
-                diry += 1
+class Player:
+    def __init__(self):
+        self.x, self.y = WIDTH // 2, HEIGHT // 2
+        self.dirx, self.diry = 0, 0
+        self.last_dir = 0
+        self.frame = 0
+        self.image = load_image('Sprite_Sheet.png')
+        self.frame_width = 80
+        self.frame_height = 80
+        self.frame_y = 80
 
 
+    def update(self):
+        if abs(self.dirx == 0) and abs(self.diry == 0):  # idle
+            self.frame = 0
+        elif abs(self.dirx) != 0:  # left or right
+            self.frame = (self.frame + 1) % 8
+        elif self.diry != 0:  # up or down
+            self.frame = (self.frame + 1) % 6
 
-running = True
-hide_cursor()
+    def draw(self):
+        if self.dirx == 0 and self.diry == 0:  # idle
+            if self.last_dir == 1 or self.last_dir == 0:
+                self.image.clip_draw(self.frame,
+                                    self.frame_y * 11+ 64,
+                                    self.frame_width,
+                                    self.frame_height,
+                                    self.x,
+                                    self.y,)
+            else:
+                self.image.clip_composite_draw(self.frame,
+                                    self.frame_y * 11+ 64,
+                                    self.frame_width,
+                                    self.frame_height,
+                                    0, 'h',
+                                    self.x,
+                                    self.y,
+                                    80,
+                                    80)
+        elif self.dirx == -1:  # left
+            self.image.clip_composite_draw((self.frame + 1) * self.frame_width,
+                                           self.frame_y * 11 + 64,
+                                           self.frame_width,
+                                           self.frame_height,
+                                           0, 'h',
+                                           self.x,
+                                           self.y,
+                                           80,
+                                           80)
+        elif self.dirx == 1:  # right
+            self.image.clip_draw(self.frame * self.frame_width,
+                                 self.frame_y * 11 + 64,
+                                 self.frame_width,
+                                 self.frame_height,
+                                 self.x,
+                                 self.y)
+        elif self.diry == -1:  # down
+            self.image.clip_draw(self.frame * self.frame_width +
+                                 self.frame_width * 6,
+                                 self.frame_y * 6 + 64,
+                                 self.frame_width,
+                                 self.frame_height,
+                                 self.x,
+                                 self.y)
+        elif self.diry == 1:  # up
+            self.image.clip_draw(self.frame * self.frame_width,
+                                 self.frame_y * 6 + 64,
+                                 self.frame_width,
+                                 self.frame_height,
+                                 self.x,
+                                 self.y)
 
-dirx = 0
-diry = 0
-frame = 0
-x, y = TUK_WIDTH // 2, TUK_HEIGHT // 2
-frame_width = 80
-frame_height = 80
-frame_y = 80
+    def handle_events(self):
+        events = get_events()
+        for event in events:
+            if event.type == SDL_QUIT:
+                return False
 
-while running:
-    clear_canvas()
-   # tuk_ground.draw(TUK_WIDTH // 2, TUK_HEIGHT // 2)
+            elif event.type == SDL_KEYDOWN:
+                if event.key == SDLK_RIGHT:
+                    player.dirx += 1
+                    player.last_dir = 1
+                elif event.key == SDLK_LEFT:
+                    player.dirx -= 1
+                    player.last_dir = -1
+                elif event.key == SDLK_UP:
+                    player.diry += 1
+                elif event.key == SDLK_DOWN:
+                    player.diry -= 1
+                elif event.key == SDLK_ESCAPE:
+                    return False
 
-    if dirx == 0 and diry == 0: #idle
-       character.clip_draw(frame * frame_width, frame_y * 3 + 64, frame_width, frame_height, x, y)
+            elif event.type == SDL_KEYUP:
+                if event.key == SDLK_RIGHT:
+                    player.dirx -= 1
+                elif event.key == SDLK_LEFT:
+                    player.dirx += 1
+                elif event.key == SDLK_UP:
+                    player.diry -= 1
+                elif event.key == SDLK_DOWN:
+                    player.diry += 1
+        return True
 
-    elif dirx == -1: # left
-        character.clip_composite_draw(frame * frame_width, frame_y * 11 + 64, frame_width, frame_height, 0, 'h', x, y, 80, 80)
-    elif dirx == 1: #right
-        character.clip_draw(frame * frame_width, frame_y * 11 + 64, frame_width, frame_height, x, y)
-    elif diry == -1: #down
-        character.clip_draw(frame * frame_width + frame_width * 6, frame_y * 6 + 64, frame_width, frame_height, x, y)
-    elif diry == 1: #up
-        character.clip_draw(frame * frame_width, frame_y * 6 + 64, frame_width, frame_height, x, y)
+    def move(self):
+        # 경계 처리 및 이동
+        if (self.x + player.dirx * 10 >= player.frame_width // 2) and (
+                self.x + player.dirx * 10 <= WIDTH - player.frame_width // 2):
+            player.x += player.dirx * 10
 
-    update_canvas()
-    handle_events()
-
-    if dirx == 0 and diry == 0: #idle
-        frame = (frame + 1) % 7
-    elif dirx == -1: # left
-        frame = (frame + 1) % 9
-    elif dirx == 1: #right
-        frame = (frame + 1) % 9
-    elif diry == -1: #down
-        frame = (frame + 1) % 6
-    elif diry == 1: #up
-        frame = (frame + 1) % 6
+        if (player.y + player.diry * 10 >= player.frame_height // 2) and (
+                player.y + player.diry * 10 <= HEIGHT - player.frame_height // 2):
+            player.y += player.diry * 10
 
 
-    #경계처리
-    if (x + dirx * 5 >= frame_width // 2) and (x + dirx * 5 <= TUK_WIDTH - frame_width // 2):
-        x += dirx * 5
-    if (y + diry * 5 >= frame_height // 2) and (y + diry * 5 <= TUK_HEIGHT - frame_height // 2):
-        y += diry * 5
-    delay(0.05)
+def main():
+    open_canvas(WIDTH, HEIGHT)
+    hide_cursor()
 
-close_canvas()
+    global player
+    player = Player()
+
+    running = True
+    while running:
+        clear_canvas()
+
+        running = player.handle_events()
+
+        player.update()
+        player.move()
+
+        # 배경 그리기 (예시)
+        # background_sheet.draw(WIDTH //2 , HEIGHT //2)
+
+        player.draw()
+
+        update_canvas()
+
+        delay(0.05)
+
+    close_canvas()
+
+
+if __name__ == '__main__':
+    main()
