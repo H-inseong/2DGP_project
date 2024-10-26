@@ -1,14 +1,20 @@
 from pico2d import *
+from pygame.examples.cursors import image
 
 WIDTH, HEIGHT = 1920, 1080
 
 class UI:
     def __init__(self):
-        self.image = load_image('Sprite_Sheet.png')
+        self.heart_image = load_image('Sprite_Sheet.png')
         self.items_image = load_image('items_sheet.png')
+        self.font = load_font('Galmuri14.ttf', 70)
+        self.large_font = load_font('Galmuri14.ttf', 75)
 
     def draw(self):
-        pass
+        self.heart_image.clip_draw(800, 64, 160, 160, 80, HEIGHT - 80)
+        self.large_font.draw(120, HEIGHT - 122, '4', (0, 0, 0))
+        self.font.draw(120, HEIGHT - 120, '4', (255, 255, 255))
+
 
 class Player:
     def __init__(self):
@@ -130,6 +136,7 @@ def main():
 
     global player
     player = Player()
+    ui = UI()
 
     running = True
     while running:
@@ -144,6 +151,7 @@ def main():
         # background_sheet.draw(WIDTH //2 , HEIGHT //2)
 
         player.draw()
+        ui.draw()
 
         update_canvas()
 
