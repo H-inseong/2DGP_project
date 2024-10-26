@@ -2,6 +2,14 @@ from pico2d import *
 
 WIDTH, HEIGHT = 1920, 1080
 
+class UI:
+    def __init__(self):
+        self.image = load_image('Sprite_Sheet.png')
+        self.items_image = load_image('items_sheet.png')
+
+    def draw(self):
+        pass
+
 class Player:
     def __init__(self):
         self.x, self.y = WIDTH // 2, HEIGHT // 2
