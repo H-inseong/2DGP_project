@@ -1,19 +1,38 @@
+from sys import platform
+
 from pico2d import *
 from pygame.examples.cursors import image
 
 WIDTH, HEIGHT = 1920, 1080
 
 class UI:
+    lbs = 80 # left blank size
+    ypos = HEIGHT - 70
     def __init__(self):
         self.heart_image = load_image('Sprite_Sheet.png')
         self.items_image = load_image('items_sheet.png')
-        self.font = load_font('Galmuri14.ttf', 70)
-        self.large_font = load_font('Galmuri14.ttf', 75)
+        self.small_font = load_font('DNFBitBitTTF.ttf', 30)
+        self.font = load_font('DNFBitBitTTF.ttf', 35)
+        self.large_font = load_font('DNFBitBitTTF.ttf', 40)
+    def draw(self, hp, bomb, rope): # 추가할 것: gold, time, stage
+        #draw heart
+        self.heart_image.clip_draw(800, 64, 160, 160,
+                                   self.lbs, self.ypos, 90, 90)
+        self.large_font.draw(self.lbs + 10, self.ypos - 23, f'{hp}', (0, 0, 0))
+        self.font.draw(self.lbs + 10, self.ypos - 20, f'{hp}', (255, 255, 255))
 
-    def draw(self):
-        self.heart_image.clip_draw(800, 64, 160, 160, 80, HEIGHT - 80)
-        self.large_font.draw(120, HEIGHT - 122, '4', (0, 0, 0))
-        self.font.draw(120, HEIGHT - 120, '4', (255, 255, 255))
+        #draw bomb
+        self.items_image.clip_draw(0, 128*10 , 128, 128,
+                                   self.lbs*2, self.ypos - 10, 90,90)
+        self.font.draw(self.lbs*2.2, self.ypos - 25, f'{bomb}', (0, 0, 0))
+        self.small_font.draw(self.lbs*2.2, self.ypos - 24, f'{bomb}', (255, 255, 255))
+
+        #draw rope
+        self.items_image.clip_draw(0, 128 * 9, 128, 128,
+                                   self.lbs * 3, self.ypos - 10, 90, 90)
+        self.font.draw(self.lbs * 3.2, self.ypos - 25, f'{rope}', (0, 0, 0))
+        self.small_font.draw(self.lbs * 3.2, self.ypos - 24, f'{rope}', (255, 255, 255))
+
 
 
 class Player:
@@ -26,6 +45,8 @@ class Player:
         self.frame_width = 80
         self.frame_height = 80
         self.frame_y = 80
+        self.hp = 4
+        self.item = [4, 4, 0] # bomb, rope, gold
 
 
     def update(self):
@@ -151,7 +172,7 @@ def main():
         # background_sheet.draw(WIDTH //2 , HEIGHT //2)
 
         player.draw()
-        ui.draw()
+        ui.draw(player.hp, player.item[0], player.item[1])
 
         update_canvas()
 
