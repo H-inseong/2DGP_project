@@ -6,6 +6,9 @@ from pygame.examples.cursors import image
 WIDTH, HEIGHT = 1920, 1080
 
 class UI:
+    #UI를 한개씩 다루는게 아닌 여기서 한번에 다루는게 맞는가?
+    #UI객체들을 다루는 추가 객체?
+
     lbs = 80 # left blank size
     ypos = HEIGHT - 70
     def __init__(self):
@@ -14,6 +17,7 @@ class UI:
         self.small_font = load_font('DNFBitBitTTF.ttf', 30)
         self.font = load_font('DNFBitBitTTF.ttf', 35)
         self.large_font = load_font('DNFBitBitTTF.ttf', 40)
+
     def draw(self, hp, bomb, rope): # 추가할 것: gold, time, stage
         #draw heart
         self.heart_image.clip_draw(800, 64, 160, 160,
@@ -45,6 +49,10 @@ class Player:
         self.frame_width = 80
         self.frame_height = 80
         self.frame_y = 80
+
+        #hp와 item 등을 여기서 관리하는게 맞는가?
+        #게임 루프가 더 좋지 않은가?
+
         self.hp = 4
         self.item = [4, 4, 0] # bomb, rope, gold
 
