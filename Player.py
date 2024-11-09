@@ -2,10 +2,13 @@ from pico2d import load_image, get_events
 from sdl2 import SDL_QUIT, SDL_KEYDOWN, SDLK_RIGHT, SDLK_LEFT, SDLK_UP, SDLK_DOWN, SDLK_ESCAPE, SDL_KEYUP
 
 from MOVEMENT_BASE import WIDTH, HEIGHT
+from state_machine import StateMachine
 
 
 class Player:
     def __init__(self):
+        self.state_machine = StateMachine(self)
+        self.state_machine.start()
         self.x, self.y = WIDTH // 2, HEIGHT // 2
         self.dirx, self.diry = 0, 0
         self.last_dir = 0
@@ -82,36 +85,8 @@ class Player:
                                  self.x,
                                  self.y)
 
-    def handle_events(self):
-        events = get_events()
-        for event in events:
-            if event.type == SDL_QUIT:
-                return False
-
-            elif event.type == SDL_KEYDOWN:
-                if event.key == SDLK_RIGHT:
-                    player.dirx += 1
-                    player.last_dir = 1
-                elif event.key == SDLK_LEFT:
-                    player.dirx -= 1
-                    player.last_dir = -1
-                elif event.key == SDLK_UP:
-                    player.diry += 1
-                elif event.key == SDLK_DOWN:
-                    player.diry -= 1
-                elif event.key == SDLK_ESCAPE:
-                    return False
-
-            elif event.type == SDL_KEYUP:
-                if event.key == SDLK_RIGHT:
-                    player.dirx -= 1
-                elif event.key == SDLK_LEFT:
-                    player.dirx += 1
-                elif event.key == SDLK_UP:
-                    player.diry -= 1
-                elif event.key == SDLK_DOWN:
-                    player.diry += 1
-        return True
+    def handle_event(self, event):
+        self.state_machine.handle_event(('INPUT', event))
 
     def move(self):
         # 경계 처리 및 이동
