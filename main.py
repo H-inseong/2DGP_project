@@ -1,7 +1,11 @@
-from pico2d import open_canvas, delay, close_canvas
+from pico2d import open_canvas, close_canvas
 
-import framework
+import game_framework
+import play_mode
 
-open_canvas(1280, 720)
-framework.run(start_mode)
+WIDTH = 1280
+HEIGHT = 720
+
+open_canvas(WIDTH, HEIGHT)
+game_framework.run(play_mode)
 close_canvas()

@@ -29,6 +29,8 @@ def time_out(e):
 
 
 
+
+
 class StateMachine:
     def __init__(self, o):
         self.o = o
@@ -41,6 +43,7 @@ class StateMachine:
         self.cur_state.enter(self.o, ('START', 0))
 
     def add_event(self, e):
+        # print(f'    DEBUG: New event {e} added to event Que')
         self.event_que.append(e)
 
     def set_transitions(self, transitions):
@@ -64,3 +67,5 @@ class StateMachine:
                 print(f'Enter into {self.cur_state}')
                 self.cur_state.enter(self.o, e)
                 return
+
+        # print(f'        Warning: Event [{e}] at State [{self.cur_state}] not handled')

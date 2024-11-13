@@ -1,14 +1,8 @@
 from pico2d import load_image, load_font
 
-from MOVEMENT_BASE import HEIGHT
-
-
 class UI:
-    #UI를 한개씩 다루는게 아닌 여기서 한번에 다루는게 맞는가?
-    #UI객체들을 다루는 추가 객체?
-
     lbs = 80 # left blank size
-    ypos = HEIGHT - 70
+    ypos = 720 - 70
     def __init__(self):
         self.heart_image = load_image('Sprite_Sheet.png')
         self.items_image = load_image('items_sheet.png')

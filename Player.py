@@ -1,12 +1,12 @@
-from pico2d import load_image, get_time
-from sdl2 import SDL_QUIT, SDL_KEYDOWN, SDLK_RIGHT, SDLK_LEFT, SDLK_UP, SDLK_DOWN, SDLK_ESCAPE, SDL_KEYUP
+from pico2d import *
 
+import UI
 import game_framework
 import game_world
-from MOVEMENT_BASE import WIDTH, HEIGHT
 from state_machine import *
 from whip import Whip
 
+WIDTH, HEIGHT = 1280, 720
 # Player move Speed
 PIXEL_PER_METER = (10.0/0.3)
 RUN_SPEED_KMPH = 20.0
@@ -42,7 +42,7 @@ class Idle:
 
     @staticmethod
     def do(player):
-        player.frame = (player.frame +  FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) & 8
+        player.frame = (player.frame +  FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 8
         if get_time() - player.wait_time > 2:
             player.state_machine.add_event(('TIME_OUT', 0))
 
@@ -66,7 +66,7 @@ class Sleep:
 
     @staticmethod
     def do(player):
-        player.frame = (player.frame +  FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) & 8
+        player.frame = (player.frame +  FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 8
 
 
     @staticmethod
@@ -95,7 +95,7 @@ class Run:
 
     @staticmethod
     def do(player):
-        player.frame = (player.frame +  FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) & 8
+        player.frame = (player.frame +  FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 8
         player.x += player.dir * 5
 
 
@@ -107,9 +107,17 @@ class Run:
 
 class Player:
     def __init__(self):
+        #self.ui = UI
         self.state_machine = StateMachine(self)
-        self.state_machine.start()
-        
+        self.state_machine.start(Idle)
+        self.state_machine.set_transitions(
+            {
+                Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, time_out: Sleep, space_down: Idle},
+                Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle, space_down: Run},
+                Sleep: {right_down: Run, left_down: Run, right_up: Run, left_up: Run, space_down: Idle}
+            }
+        )
+
         self.x, self.y = WIDTH // 2, HEIGHT // 2
         self.dirx, self.diry = 0, 0
         self.face_dir = 1
@@ -118,7 +126,11 @@ class Player:
         self.image = load_image('Sprite_Sheet.png')
         self.frame_width = 80
         self.frame_height = 80
-        self.frame_y = 80
+        self.frame_y = 8
+
+        self.hp = 4
+        self.bomb = 4
+        self.rope = 4
 
         #hp와 item 등을 여기서 관리하는게 맞는가?
         self.hp = 4
@@ -129,6 +141,7 @@ class Player:
 
     def draw(self):
         self.state_machine.draw()
+        #self.ui.draw(self.hp, self.bomb, self.rope)
 
     def handle_event(self, event):
         self.state_machine.handle_event(('INPUT', event))
@@ -137,5 +150,5 @@ class Player:
         whip = Whip(self.x, self.y, self.face_dir * 10)
         game_world.add_object(whip)
         #if 파워팩 장착시 FireWhip 작동
-
-    def 
+    def handle_collusion(self, group, other):
+        pass
