@@ -14,6 +14,14 @@ def update():
         for o in layer:
             o.update()
 
+#카메라 이동 메인 로직
+# 카메라 위치 정의
+#camera_x, camera_y = player.x - WIDTH // 2, player.y - HEIGHT // 2
+# 그리기 시, 카메라 위치를 반영
+#draw_x = object.x - camera_x
+#draw_y = object.y - camera_y
+#object.image.draw(draw_x, draw_y)
+
 def render():
     for layer in world:
         for o in layer:
