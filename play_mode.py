@@ -6,7 +6,7 @@ from whip import Whip
 
 def init():
     global player
-    player = Player()
+    player = Player( 200, 200)
     game_world.add_object(player, 1)
 
 def finish():

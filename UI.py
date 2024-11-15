@@ -1,6 +1,6 @@
 from pico2d import load_image, load_font
 
-class UI:
+class UIP:
     lbs = 80 # left blank size
     ypos = 720 - 70
     def __init__(self):
