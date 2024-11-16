@@ -1,8 +1,11 @@
 from pico2d import load_image, load_font
 
+WIDTH = 1920
+HEIGHT = 960
+
 class UIP:
     lbs = 80 # left blank size
-    ypos = 720 - 70
+    ypos = HEIGHT - 70
     def __init__(self):
         self.heart_image = load_image('Sprite_Sheet.png')
         self.items_image = load_image('items_sheet.png')

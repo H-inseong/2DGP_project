@@ -32,23 +32,24 @@ class Player:
         self.state_machine.start(Idle)
         self.state_machine.set_transitions(
             {
-                Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, time_out: Sleep, space_down: Idle, down_down: Crouch},
-                Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle, space_down: Run, down_down: Crouch_Move},
-                Sleep: {right_down: Run, left_down: Run, right_up: Run, left_up: Run, space_down: Idle},
-                Crouch: {down_up: Idle, left_down: Crouch_Move, right_down:Crouch_Move },
-                Crouch_Move : {left_up: Crouch, right_up:Crouch, left_down: Crouch_Move, right_down:Crouch_Move, down_up: Run}
+                Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, space_down: Idle, down_down: Crouch, up_down: ClimbMove},
+                Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle, space_down: Run, down_down: CrouchMove},
+                Crouch: {down_up: Idle, left_down: CrouchMove, right_down:CrouchMove},
+                CrouchMove : {left_up: Crouch, right_up:Crouch, left_down: CrouchMove, right_down:CrouchMove, down_up: Run},
+                Climb: {up_up: Climb, up_down: ClimbMove, down_up: Climb, down_down: ClimbMove},
+                ClimbMove: {up_up: Climb, up_down: ClimbMove, down_up:Climb, down_down: ClimbMove}
             }
         )
         #f = frame
         self.f_w = 80
-        self.f_w = 80
+        self.f_h = 80
 
         self.x, self.y = x, y    #생성 위치
         self.dirx, self.diry = 5, 5
         self.face_dir = 1
         self.frame = 0
         self.maxframe = 8
-        self.action = 11
+        self.act = 11
         self.load_image()
 
         self.hp = 4
@@ -61,8 +62,6 @@ class Player:
 
     def draw(self):
         self.state_machine.draw()
-
-
         self.ui.draw(self.hp, self.bomb, self.rope)
 
     def handle_event(self, event):
@@ -86,7 +85,7 @@ class Idle:
             player.face_dir = 1
 
         player.dirx = 0
-        player.action = 11
+        player.act = 11
         player.frame = 0
         player.maxframe = 1
 
@@ -103,16 +102,16 @@ class Idle:
     def draw(player):
         if player.face_dir == 1:
             player.image.clip_draw(int(player.frame),
-                                   player.f_w * player.action + 64,
+                                   player.f_h * player.act + 64,
                                    player.f_w,
-                                   player.f_w,
+                                   player.f_h,
                                    player.x,
                                    player.y, )
         else:
             player.image.clip_composite_draw(int(player.frame),
-                                             player.f_w * player.action + 64,
+                                             player.f_h * player.act + 64,
                                              player.f_w,
-                                             player.f_w,
+                                             player.f_h,
                                              0, 'h',
                                              player.x,
                                              player.y,
@@ -121,42 +120,15 @@ class Idle:
 
 
 
-class Sleep:
-    @staticmethod
-    def enter(player, e):
-        if start_event(e):
-            player.face_dir = 1
-            player.action = 3
-            player.frame = 0
-
-    @staticmethod
-    def exit(player, e):
-        pass
-
-    @staticmethod
-    def do(player):
-        player.frame = (int(player.frame) +  FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
-
-
-    @staticmethod
-    def draw(player):
-        if player.face_dir == 1:
-            player.image.clip_composite_draw(int(player.frame) * 100, 300, 100, 100,
-                                          3.141592 / 2, '', player.x - 25, player.y - 25, 100, 100)
-        else:
-            player.image.clip_composite_draw(int(player.frame) * 100, 200, 100, 100,
-                                          -3.141592 / 2, '', player.x + 25, player.y - 25, 100, 100)
-
-
 class Run:
     @staticmethod
     def enter(player, e):
         if right_down(e) or left_up(e): # 오른쪽으로 RUN
-            player.dirx, player.face_dir, player.action = 1, 1, 1
+            player.dirx, player.face_dir, player.act = 1, 1, 1
         elif left_down(e) or right_up(e): # 왼쪽으로 RUN
-            player.dirx, player.face_dir, player.action = -1, -1, 0
+            player.dirx, player.face_dir, player.act = -1, -1, 0
 
-        player.action = 11
+        player.act = 11
         player.frame = 0
         player.maxframe = 8
 
@@ -177,16 +149,16 @@ class Run:
     def draw(player):
         if player.face_dir == 1:
             player.image.clip_draw(int(player.frame) * player.f_w + player.f_w,
-                                   player.f_w * player.action + 64,
+                                   player.f_h * player.act + 64,
                                    player.f_w,
-                                   player.f_w,
+                                   player.f_h,
                                    player.x,
                                    player.y, )
         else:
             player.image.clip_composite_draw(int(player.frame) * player.f_w + player.f_w,
-                                             player.f_w * player.action + 64,
+                                             player.f_h * player.act + 64,
                                              player.f_w,
-                                             player.f_w,
+                                             player.f_h,
                                              0, 'h',
                                              player.x,
                                              player.y,
@@ -203,7 +175,7 @@ class Crouch:
         elif left_down(e) or right_up(e):
             player.face_dir = 1
 
-        player.action = 10
+        player.act = 10
         if player.frame != 2:
             player.frame = 0
         player.maxframe = 2
@@ -224,31 +196,31 @@ class Crouch:
     def draw(player):
         if player.face_dir == 1:
             player.image.clip_draw(int(player.frame) * player.f_w,
-                                   player.f_w * player.action + 64,
+                                   player.f_h * player.act + 64,
                                    player.f_w,
-                                   player.f_w,
+                                   player.f_h,
                                    player.x,
                                    player.y, )
         else:
             player.image.clip_composite_draw(int(player.frame) * player.f_w,
-                                             player.f_w * player.action + 64,
+                                             player.f_h * player.act + 64,
                                              player.f_w,
-                                             player.f_w,
+                                             player.f_h,
                                              0, 'h',
                                              player.x,
                                              player.y,
                                              80,
                                              80)
 
-class Crouch_Move:
+class CrouchMove:
     @staticmethod
     def enter(player, e):
         if right_down(e) or left_up(e):
-            player.dirx, player.face_dir, player.action = 0.5, 1, 1
+            player.dirx, player.face_dir, player.act = 0.5, 1, 1
         elif left_down(e) or right_up(e):
-            player.dirx, player.face_dir, player.action = -0.5, -1, 0
+            player.dirx, player.face_dir, player.act = -0.5, -1, 0
 
-        player.action = 10
+        player.act = 10
         player.frame = 0
         player.maxframe = 7
 
@@ -267,16 +239,16 @@ class Crouch_Move:
     def draw(player):
         if player.face_dir == 1:
             player.image.clip_draw(int(player.frame) * player.f_w + player.f_w * 5,
-                                   player.f_w * player.action + 64,
+                                   player.f_h * player.act + 64,
                                    player.f_w,
-                                   player.f_w,
+                                   player.f_h,
                                    player.x,
                                    player.y, )
         else:
             player.image.clip_composite_draw(int(player.frame) * player.f_w + player.f_w * 5,
-                                             player.f_w * player.action + 64,
+                                             player.f_h * player.act + 64,
                                              player.f_w,
-                                             player.f_w,
+                                             player.f_h,
                                              0, 'h',
                                              player.x,
                                              player.y,
@@ -293,38 +265,58 @@ class Climb:
         elif left_down(e) or right_up(e):
             player.face_dir = 1
 
-        player.action = 11
+        player.act = 4
         player.frame = 0
         player.maxframe = 1
 
     @staticmethod
     def exit(player, e):
-        if space_down(e):
-            player.jump()
+        pass
 
     @staticmethod
     def do(player):
-        player.frame = (int(player.frame) +  FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
+        pass
 
     @staticmethod
     def draw(player):
-        if player.face_dir == 1:
-            player.image.clip_draw(int(player.frame),
-                                   player.f_w * player.action + 64,
+        player.image.clip_draw(int(player.frame) * player.f_w,
+                                   player.f_h * player.act + 64,
                                    player.f_w,
-                                   player.f_w,
+                                   player.f_h,
                                    player.x,
                                    player.y, )
-        else:
-            player.image.clip_composite_draw(int(player.frame),
-                                             player.f_w * player.action + 64,
-                                             player.f_w,
-                                             player.f_w,
-                                             0, 'h',
-                                             player.x,
-                                             player.y,
-                                             80,
-                                             80)
+
+class ClimbMove:
+    @staticmethod
+    def enter(player, e):
+        if up_down(e) or down_up(e):
+            player.diry = 1
+        elif down_down(e) or up_up(e):
+            player.diry = -1
+
+        player.act = 4
+        player.frame = 0
+        player.maxframe = 10
+
+    @staticmethod
+    def exit(player, e):
+        player.diry = 0
+
+    @staticmethod
+    def do(player):
+        player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
+        player.y += player.diry * RUN_SPEED_PPS * game_framework.frame_time
+
+    @staticmethod
+    def draw(player):
+        player.image.clip_draw(int(player.frame) * player.f_w,
+                                   player.f_h * player.act + 64,
+                                   player.f_w,
+                                   player.f_h,
+                                   player.x,
+                                   player.y, )
+
+
 class Stunned:
     @staticmethod
     def enter(player, e):
@@ -335,7 +327,7 @@ class Stunned:
         elif left_down(e) or right_up(e):
             player.face_dir = 1
 
-        player.action = 11
+        player.act = 11
         player.frame = 0
         player.maxframe = 1
 
@@ -352,14 +344,14 @@ class Stunned:
     def draw(player):
         if player.face_dir == 1:
             player.image.clip_draw(int(player.frame),
-                                   player.f_w * player.action + 64,
+                                   player.f_w * player.act + 64,
                                    player.f_w,
                                    player.f_w,
                                    player.x,
                                    player.y, )
         else:
             player.image.clip_composite_draw(int(player.frame),
-                                             player.f_w * player.action + 64,
+                                             player.f_w * player.act + 64,
                                              player.f_w,
                                              player.f_w,
                                              0, 'h',
@@ -378,7 +370,7 @@ class Dead:
         elif left_down(e) or right_up(e):
             player.face_dir = 1
 
-        player.action = 11
+        player.act = 11
         player.frame = 0
         player.maxframe = 1
 
@@ -395,14 +387,14 @@ class Dead:
     def draw(player):
         if player.face_dir == 1:
             player.image.clip_draw(int(player.frame),
-                                   player.f_w * player.action + 64,
+                                   player.f_w * player.act + 64,
                                    player.f_w,
                                    player.f_w,
                                    player.x,
                                    player.y, )
         else:
             player.image.clip_composite_draw(int(player.frame),
-                                             player.f_w * player.action + 64,
+                                             player.f_w * player.act + 64,
                                              player.f_w,
                                              player.f_w,
                                              0, 'h',
@@ -421,7 +413,7 @@ class Jump:
         elif left_down(e) or right_up(e):
             player.face_dir = 1
 
-        player.action = 11
+        player.act = 11
         player.frame = 0
         player.maxframe = 1
 
@@ -438,14 +430,14 @@ class Jump:
     def draw(player):
         if player.face_dir == 1:
             player.image.clip_draw(int(player.frame),
-                                   player.f_w * player.action + 64,
+                                   player.f_w * player.act + 64,
                                    player.f_w,
                                    player.f_w,
                                    player.x,
                                    player.y, )
         else:
             player.image.clip_composite_draw(int(player.frame),
-                                             player.f_w * player.action + 64,
+                                             player.f_w * player.act + 64,
                                              player.f_w,
                                              player.f_w,
                                              0, 'h',
@@ -464,7 +456,7 @@ class Attack:
         elif left_down(e) or right_up(e):
             player.face_dir = 1
 
-        player.action = 11
+        player.act = 11
         player.frame = 0
         player.maxframe = 1
 
@@ -481,14 +473,14 @@ class Attack:
     def draw(player):
         if player.face_dir == 1:
             player.image.clip_draw(int(player.frame),
-                                   player.f_w * player.action + 64,
+                                   player.f_w * player.act + 64,
                                    player.f_w,
                                    player.f_w,
                                    player.x,
                                    player.y, )
         else:
             player.image.clip_composite_draw(int(player.frame),
-                                             player.f_w * player.action + 64,
+                                             player.f_w * player.act + 64,
                                              player.f_w,
                                              player.f_w,
                                              0, 'h',
