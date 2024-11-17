@@ -55,14 +55,14 @@ class Player:
         self.hp = 4
         self.bomb = 4
         self.rope = 4
-        self.gold = 0
+        self.gold = 12
 
     def update(self):
         self.state_machine.update()
 
     def draw(self):
         self.state_machine.draw()
-        self.ui.draw(self.hp, self.bomb, self.rope)
+        self.ui.draw(self.hp, self.bomb, self.rope, self.gold)
         draw_rectangle(*self.get_bb())
 
     def handle_event(self, event):

@@ -13,7 +13,7 @@ class UIP:
         self.font = load_font('DNFBitBitTTF.ttf', 35)
         self.large_font = load_font('DNFBitBitTTF.ttf', 40)
 
-    def draw(self, hp, bomb, rope): # 추가할 것: gold, time, stage
+    def draw(self, hp, bomb, rope, gold): # 추가할 것: gold, time, stage
         #draw heart
         self.heart_image.clip_draw(800, 64, 160, 160,
                                    self.lbs, self.ypos, 90, 90)
@@ -31,3 +31,10 @@ class UIP:
                                    self.lbs * 3, self.ypos - 10, 90, 90)
         self.font.draw(self.lbs * 3.2, self.ypos - 25, f'{rope}', (0, 0, 0))
         self.small_font.draw(self.lbs * 3.2, self.ypos - 24, f'{rope}', (255, 255, 255))
+
+        # draw gold
+        self.items_image.clip_draw(128 * 15, 128 * 15, 128, 128,
+                                   self.lbs * 4, self.ypos - 10, 80, 80)
+        self.font.draw(self.lbs * 4.2, self.ypos - 25, f'{gold}', (0, 0, 0))
+        self.small_font.draw(self.lbs * 4.2, self.ypos - 24, f'{gold}', (255, 255, 255))
+
