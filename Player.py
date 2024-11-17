@@ -63,9 +63,11 @@ class Player:
     def draw(self):
         self.state_machine.draw()
         self.ui.draw(self.hp, self.bomb, self.rope)
+        draw_rectangle(*self.get_bb())
 
     def handle_event(self, event):
         self.state_machine.handle_event(('INPUT', event))
+
 
     def whip(self):
         whip = Whip(self.x, self.y, self.face_dir * 10)
@@ -73,6 +75,10 @@ class Player:
         #if 파워팩 장착시 FireWhip 작동
     def handle_collusion(self, group, other):
         pass
+    def get_bb(self):
+        if self.state_machine.cur_state == Crouch or self.state_machine.cur_state == CrouchMove:
+            return self.x - 30, self.y - 33, self.x + 30, self.y
+        return self.x - 30, self.y - 33, self.x + 30, self.y + 30
 
 class Idle:
     @staticmethod
