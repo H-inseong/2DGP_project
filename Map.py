@@ -1,35 +1,56 @@
 from pico2d import *
 
 class Tile:
-    sprite_sheet = None
+    rope_sheet = None
     sprite_sheet = None
     def __init__(self, tile_type, x, y):
         if Tile.sprite_sheet is None:
             Tile.sprite_sheet = load_image('background_main.png')
+            Tile.ex_sheet = load_image('background_extrashape.png')
+            Tile.wood_sheet = load_image('background_woods.png')
+            Tile.rope_sheet = load_image('rope.png')
 
-        self.tile_type = tile_type  # 'empty', 'solid', 'ladder', etc.
+        self.tile_type = tile_type
         self.x = x
         self.y = y
         self.f = 128
-        self.rt = 5/8
-        self.passable = self.tile_type not in ['solid', 'spike']
+        self.rt = 5/8 * 100
+        self.passable = self.tile_type not in ['solid', 'border']
 
     def draw(self, camera_x, camera_y):
         if self.tile_type == 'empty':
-            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y)
+            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y, self.rt, self.rt)
         elif self.tile_type == 'border':
-            Tile.sprite_sheet.clip_draw(self.f * 7, self.f * 11, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y)
+            Tile.sprite_sheet.clip_draw(self.f * 7, self.f * 11, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y, self.rt, self.rt)
         elif self.tile_type == 'solid':
-            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y)
+            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y, self.rt, self.rt)
         elif self.tile_type == 'ladder':
-            Tile.sprite_sheet.clip_draw(self.f * 4, self.f * 10, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y)
+            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, (self.x * 80) - camera_x,(self.y * 80) - camera_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 4, self.f * 10, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y, self.rt, self.rt)
+        elif self.tile_type == 'spike':
+            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, (self.x * 80) - camera_x,(self.y * 80) - camera_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 4, self.f * 10, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y, self.rt, self.rt)
+        elif self.tile_type == 'rope':
+            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, (self.x * 80) - camera_x,(self.y * 80) - camera_y, self.rt, self.rt)
+            Tile.rope_sheet.clip_draw(self.f * 5, 0, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y, self.rt, self.rt)
+
+    def get_bb(self):
+        # 충돌 박스 (bounding box) 정의
+        left = self.x * 80
+        bottom = self.y * 80
+        right = left + 80
+        top = bottom + 80
+        return left, bottom, right, top
+
+    def handle_collision(self, group, other):
+        # 타일 충돌 반응 폭발 구현
+        pass
 
 
 class Map:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-
 
         self.tiles = {}
         for x in range(width):
