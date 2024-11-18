@@ -16,22 +16,23 @@ class Whip:
         self.frame = 0
         self.active = False
         self.aa = False
+        game_world.add_collision_pair('Whip:Monster', self, None)
 
     def draw(self, x, y):
         if self.direction == 1:
-            if int(self.frame) == 3:
+            if int(self.frame) < 3:
                 Whip.image.clip_draw(int(self.frame) * 128, 0, 128, 128,
-                                     self.x - 60 - (6 - int(self.frame) * 15) + x, self.y + 40 + y, 60, 60)
+                                     self.x - 60 - (6 - int(self.frame) * 15) - x, self.y + y, 60, 60)
             else:
                 Whip.image.clip_draw(int(self.frame) * 128, 0, 128, 128,
-                                 self.x - 60 - (6 - int(self.frame) * 15)+ x, self.y+ y, 60, 60)
+                                 self.x - 60 - (6 - int(self.frame) * 15) - x, self.y- y, 60, 60)
         else:
-            if int(self.frame) == 3:
+            if int(self.frame) < 3:
                 Whip.image.clip_composite_draw(int(self.frame) * 128, 0, 128, 128, 0, 'h',
-                                     self.x + 60 + (6 - int(self.frame) * 15) + x,self.y + 40+ y, 60, 60)
+                                     self.x + 60 + (6 - int(self.frame) * 15) - x,self.y + 40 - y, 60, 60)
             else:
                 Whip.image.clip_composite_draw(int(self.frame) * 128, 0, 128, 128, 0, 'h',
-                                           self.x + 60 + (6 - int(self.frame) * 15) + x,self.y+ y, 60, 60)
+                                           self.x + 60 + (6 - int(self.frame) * 15) - x,self.y - y, 60, 60)
         if int(self.frame) == 5:
             aa = True
         draw_rectangle(*self.get_bb())
@@ -47,11 +48,17 @@ class Whip:
 
     def get_bb(self):
         if self.active:
-            if int(self.frame) in [0, 1, 2]:
-                return self.x - 100 - (6 - int(self.frame) * 15), self.y + 50, self.x + 15, self.y + 15
+            if self.direction == 1:
+                if int(self.frame) in [0, 1, 2]:
+                    return self.x - 100 - (6 - int(self.frame) * 15), self.y + 50, self.x + 15, self.y + 15
+                else:
+                    return self.x - 25, self.y - 10, self.x + 25, self.y + 10
             else:
-                return self.x - 25, self.y - 10, self.x + 25, self.y + 10
-        return None
+                if int(self.frame) in [0, 1, 2]:
+                    return self.x + 100 + (6 - int(self.frame) * 15), self.y + 50, self.x + 15, self.y + 15
+                else:
+                    return self.x + 25, self.y - 10, self.x - 25, self.y + 10
+        return 0,0,0,0
 
     def activate(self):
         self.active = True

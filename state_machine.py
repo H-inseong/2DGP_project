@@ -45,6 +45,8 @@ def space_down(e):
 def time_out(e):
     return e[0] == 'TIME_OUT'
 
+def landed(e):
+    return e[0] == 'landed'
 
 
 

@@ -18,13 +18,13 @@ ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 10.0
 
 class Snake:
-    images = None
+    image = None
 
     def load_images(self):
         if Snake.image == None:
-            Snake.image = load_image('Snake.png')
+            Snake.image = load_image('Snakes.png')
     def __init__(self, color):
-        self.x, self.y = random.randint(1600-800, 1600), 150
+        self.x, self.y = random.randint(1600-800, 1600), 240
         self.load_images()
         self.f_size = 80
         self.frame = 0
@@ -46,20 +46,20 @@ class Snake:
         pass
 
 
-    def draw(self):
+    def draw(self, x, y):
         if self.dir < 0:
-            Snake.images.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.color + self.size, 'h', self.x, self.y , 80, 80)
+            Snake.image.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.color + self.f_size + 28, self.f_size, self.f_size, 0, 'h', self.x - x, self.y - y, 80, 80)
         else:
-            Snake.images.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.color + self.size, 'h', self.x, self.y , 80, 80)
-
+            Snake.image.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.color + self.f_size + 28, self.f_size, self.f_size, 0, 'h', self.x - x, self.y - y, 80, 80)
         draw_rectangle(*self.get_bb())
 
     def handle_event(self, event):
         pass
 
     def handle_collision(self, group, other):
-        if group == 'zombie:ball':
-            pass
+        if group == 'Whip:Monster':
+            game_world.remove_object(self)
+
 
     def get_bb(self):
         return self.x - self.f_size/2 , self.y - self.f_size/2 , self.x + self.f_size/2 , self.y + self.f_size/2

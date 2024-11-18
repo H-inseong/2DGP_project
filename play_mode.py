@@ -3,6 +3,7 @@ import game_framework
 import game_world
 from Map import Map
 from Player import Player
+from enemies import Snake
 from whip import Whip
 
 def init():
@@ -12,6 +13,11 @@ def init():
 
     map_obj = Map(46, 38)  # 맵 생성 (가로 46 타일, 세로 38 타일 예시)
     camera_x, camera_y = 0, 0
+
+    s = Snake(0)
+    game_world.add_object(s, 1)
+    game_world.add_collision_pair('Player:Monster', player, s)
+    game_world.add_collision_pair('Whip:Monster', None, s)
 
     game_world.add_collision_pair('Player:Map', player, None)  # 그룹 A에 플레이어 추가
     for tile in map_obj.tiles.values():  # Tile 객체를 순회
@@ -40,6 +46,10 @@ def update():
 
 def draw():
     pico2d.clear_canvas()
+    if player.view_down == True:
+        game_world.render(camera_x, camera_y - 240)
+    if player.view_down == True:
+        game_world.render(camera_x, camera_y + 240)
     game_world.render(camera_x, camera_y)
     pico2d.update_canvas()
 

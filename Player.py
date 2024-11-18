@@ -23,7 +23,7 @@ FRAMES_PER_ACTION = 8
 
 DEBUG = True
 
-GRAVITY = -300
+GRAVITY = -500
 
 class Player:
     image = None
@@ -45,12 +45,12 @@ class Player:
                        z_down: Attack},
                 Run: {right_down: Run, left_down: Run, right_up: Idle, left_up: Idle, space_down: Jump, down_down: CrouchMove, z_down: Attack},
                 Crouch: {down_up: Idle, left_down: CrouchMove, right_down:CrouchMove, down_down: Crouch, z_down: Attack, space_down: Jump},
-                CrouchMove : {left_up: Crouch, right_up:Crouch, left_down: CrouchMove, right_down:CrouchMove, down_up: Run},
+                CrouchMove : {left_up: Crouch, right_up:Crouch, left_down: CrouchMove, right_down:CrouchMove, down_up: Run, space_down: Jump},
                 Climb: {up_up: Climb, up_down: ClimbMove, down_up: Climb, down_down: ClimbMove, z_down: Idle},
                 ClimbMove: {up_up: Climb, up_down: ClimbMove, down_up:Climb, down_down: ClimbMove},
                 Stunned: { time_out: Idle },
                 Attack: { right_up: Attack, left_up: Attack, right_down: Attack, left_down: Attack, space_down: Jump, time_out: Idle},
-                Jump: { right_down: Jump, left_down: Jump }
+                Jump: { right_down: Jump, left_down: Jump , landed: Idle}
             }
         )
         #f = frame
@@ -67,7 +67,11 @@ class Player:
         self.load_image()
         self.view_x = 0
         self.view_y = 0
+        self.view_down = False
+        self.view_up = False
         self.whip = Whip(self.x, self.y)
+        self.left_pressed = False
+        self.right_pressed = False
 
         self.hp = 4
         self.bomb = 4
@@ -82,6 +86,15 @@ class Player:
         self.velocity_y = 0  # 초기 수직 속도
 
     def update(self):
+        if self.left_pressed and not self.right_pressed:
+            self.dirx = -1
+            self.face_dir = -1
+        elif self.right_pressed and not self.left_pressed:
+            self.dirx = 1
+            self.face_dir = 1
+        else:
+            self.dirx = 0
+
         if not self.land:
             self.velocity_y += GRAVITY * game_framework.frame_time
             self.y += self.velocity_y * game_framework.frame_time
@@ -110,6 +123,30 @@ class Player:
             draw_rectangle(bb[0] - self.view_x, bb[1] - self.view_y, bb[2] - self.view_x, bb[3] - self.view_y)
 
     def handle_event(self, event):
+        if event.type == SDL_KEYDOWN:
+            if event.key == SDLK_LEFT:
+                self.left_pressed = True
+                self.dirx = -1
+                self.face_dir = -1
+            elif event.key == SDLK_RIGHT:
+                self.right_pressed = True
+                self.dirx = 1
+                self.face_dir = 1
+        elif event.type == SDL_KEYUP:
+            if event.key == SDLK_LEFT:
+                self.left_pressed = False
+                if self.right_pressed:
+                    self.dirx = 1
+                    self.face_dir = 1
+                else:
+                    self.dirx = 0
+            elif event.key == SDLK_RIGHT:
+                self.right_pressed = False
+                if self.left_pressed:
+                    self.dirx = -1
+                    self.face_dir = -1
+                else:
+                    self.dirx = 0
         self.state_machine.handle_event(('INPUT', event))
 
     def handle_collision(self, group, other):
@@ -118,11 +155,13 @@ class Player:
                 if other.tile_type in ['solid', 'border']:
                     self.resolve_collision(other)
                 elif other.tile_type == 'spike':
-                    if self.dy < 0:
-                        self.hp =  0
+                    if self.velocity_y < 0:
+                        self.hp = 0
                         self.state_machine.start(Dead)
-                elif other.tile_type == 'ladder':
+
+            elif other.tile_type == 'ladder':
                     self.ladder = True
+
         elif group == 'Player:Item':
             match (other.name):
                 case('Gold Bar'):
@@ -158,18 +197,22 @@ class Player:
 
         if min_overlap == overlap_left:
             self.x -= overlap_left
+            self.dirx = 0
+
         elif min_overlap == overlap_right:
             self.x += overlap_right
+            self.dirx = 0
+
         elif min_overlap == overlap_bottom:
             self.y -= overlap_bottom
-            self.diry = 0  # 수직 속도 중지
-            self.jumped = False  # 다시 점프 가능하도록 설정
-            self.land = True
             self.velocity_y = 0
-            self.state_machine.add_event(('TIME_OUT', 0))  # Idle 또는 Run 상태로 전환
+
         elif min_overlap == overlap_top:
             self.y += overlap_top
-            self.diry = 0  # 상승 속도 중지
+            self.velocity_y = 0
+            self.jumped = False
+            self.land = True
+            self.state_machine.add_event(('landed', 0))
 
     def get_bb(self):
         if self.state_machine.cur_state == Crouch or self.state_machine.cur_state == CrouchMove:
@@ -207,8 +250,7 @@ class Idle:
 
     @staticmethod
     def do(player):
-        player.frame = (
-                                   int(player.frame) + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
+        pass
 
     @staticmethod
     def draw(player):
@@ -294,6 +336,7 @@ class Crouch:
 
     @staticmethod
     def exit(player, e):
+        player.view_down = False
         pass
 
     @staticmethod
@@ -305,7 +348,7 @@ class Crouch:
                 player.frame = 2
         if get_time() - player.c_time > 3:
             player.state_machine.add_event(('TIME_OUT', 0))
-            player.view_y -= 50
+            player.view_down = True
             # 시야가 아래로 이동
 
     @staticmethod
@@ -384,22 +427,30 @@ class Climb:
             player.face_dir = -1
         elif left_down(e) or right_up(e):
             player.face_dir = 1
-        # 플레이어가 사다리에 있을 때
-        player.act = 3
-        player.frame = 0
-        player.maxframe = 4
-        player.up_time = get_time()
+
+        if player.ladder == 1:
+            player.act = 4
+            player.frame = 0
+            player.maxframe = 1
+        else:
+            player.act = 3
+            player.frame = 0
+            player.maxframe = 5
+            player.up_time = get_time()
 
     @staticmethod
     def exit(player, e):
-        pass
+        player.view_up = False
 
     @staticmethod
     def do(player):
-        player.frame = (
-                                   player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
+        if player.frame < 4:
+            player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
+
+
         if get_time() - player.up_time > 3:
             player.state_machine.add_event(('TIME_OUT', 0))
+            player.view_up = False
 
     @staticmethod
     def draw(player):
@@ -429,8 +480,7 @@ class ClimbMove:
 
     @staticmethod
     def do(player):
-        player.frame = (
-                                   player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
+        player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
         player.y += player.diry * RUN_SPEED_PPS * game_framework.frame_time
 
     @staticmethod
@@ -606,55 +656,11 @@ class Dead:
                                                  80,
                                                  80)
 
-    class Jump:
-        @staticmethod
-        def enter(player, e):
-            if not player.jumped:
-                player.velocity_y = 800  # 점프 초기 속도 (픽셀/초)
-                player.jumped = True
-                player.land = False
-
-            player.act = 2
-            player.maxframe = 7
-            player.frame = 0
-
-        @staticmethod
-        def exit(player, e):
-            pass
-
-        @staticmethod
-        def do(player):
-            player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % (player.maxframe + 1)
-            if player.frame > 7:
-                player.frame = 7
-
-            # y 위치는 Player.update에서 이미 처리됨
-            # 수직 속도는 Player.update에서 중력에 의해 업데이트됨
-
-        @staticmethod
-        def draw(player):
-            if player.face_dir == 1:
-                player.image.clip_draw(int(player.frame) * player.f_w,
-                                       player.f_h * player.act + 64,
-                                       player.f_w,
-                                       player.f_h,
-                                       player.x - player.view_x,
-                                       player.y - player.view_y, )
-            else:
-                player.image.clip_composite_draw(int(player.frame) * player.f_w,
-                                                 player.f_w * player.act + 64,
-                                                 player.f_w,
-                                                 player.f_w,
-                                                 0, 'h',
-                                                 player.x - player.view_x,
-                                                 player.y - player.view_y,
-                                                 80,
-                                                 80)
 class Jump:
         @staticmethod
         def enter(player, e):
-            if not player.jumped:
-                player.velocity_y = 800  # 점프 초기 속도 (픽셀/초)
+            if not player.jumped and space_down(e):
+                player.velocity_y = 300  # 점프 초기 속도 (픽셀/초)
                 player.jumped = True
                 player.land = False
 
@@ -671,10 +677,7 @@ class Jump:
             player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % (player.maxframe + 1)
             if player.frame > 7:
                 player.frame = 7
-
-            # y 위치는 Player.update에서 이미 처리됨
-            # 수직 속도는 Player.update에서 중력에 의해 업데이트됨
-
+            player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time
         @staticmethod
         def draw(player):
             if player.face_dir == 1:

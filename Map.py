@@ -45,8 +45,8 @@ class Tile:
 
     def get_bb(self):
         # 충돌 박스 (bounding box) 정의
-        left = self.x * 80
-        bottom = self.y * 80
+        left = self.x * 80 - 40
+        bottom = self.y * 80 - 40
         right = left + 80
         top = bottom + 80
         return left, bottom, right, top
@@ -79,7 +79,7 @@ class Map:
         end_x = int(min((camera_x + screen_width) // 80 + 1, self.width))
         end_y = int(min((camera_y + screen_height) // 80 + 1, self.height))
 
-        for x in range((start_x), end_x):
+        for x in range(start_x, end_x):
             for y in range(start_y, end_y):
                 self.tiles[(x, y)].draw(camera_x, camera_y)
 
