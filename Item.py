@@ -17,7 +17,7 @@ class Item:
                 self.name = 'Gold Bar'
                 self.value = 1
                 self.take = 1
-            case ( 14, 15):
+            case ( 15, 15):
                 self.name = 'Gold Bars'
                 self.value = 3
                 self.take = 1
@@ -57,5 +57,6 @@ class Item:
     def get_bb(self):
         return self.x - 40, self.y + 40, self.x + 40, self.y + 40
 
-    def handle_collusion(self, group, other):
-        pass
+    def handle_collision(self, group, other):
+        if group == 'Player:Item':
+            pass

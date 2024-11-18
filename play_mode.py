@@ -1,13 +1,21 @@
 from pico2d import *
 import game_framework
 import game_world
+from Map import Map
 from Player import Player
 from whip import Whip
 
 def init():
-    global player
-    player = Player( 200, 200)
+    global player, map, camera_x, camera_y
+    player = Player(240, 240)
     game_world.add_object(player, 1)
+
+    map_obj = Map(46, 38)  # 맵 생성 (가로 46 타일, 세로 38 타일 예시)
+    camera_x, camera_y = 0, 0
+
+    game_world.add_collision_pair('Player:Map', player, None)  # 그룹 A에 플레이어 추가
+    for tile in map_obj.tiles.values():  # Tile 객체를 순회
+        game_world.add_collision_pair('Player:Map', None, tile)
 
 def finish():
     game_world.clear()
@@ -24,12 +32,15 @@ def handle_events():
             player.handle_event(event)
 
 def update():
+    global camera_x, camera_y
+    player.update()
+    camera_x, camera_y = player.view_x, player.view_y
     game_world.update()
     game_world.handle_collisions()
 
 def draw():
     pico2d.clear_canvas()
-    game_world.render()
+    game_world.render(camera_x, camera_y)
     pico2d.update_canvas()
 
 

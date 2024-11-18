@@ -1,5 +1,10 @@
 from pico2d import *
 
+import game_world
+
+screen_width = 1920
+screen_height = 960
+
 class Tile:
     rope_sheet = None
     sprite_sheet = None
@@ -14,25 +19,29 @@ class Tile:
         self.x = x
         self.y = y
         self.f = 128
-        self.rt = 5/8 * 100
+        self.rt = 80
         self.passable = self.tile_type not in ['solid', 'border']
 
-    def draw(self, camera_x, camera_y):
+    def draw(self, camera_x=0, camera_y=0):
+        screen_x = (self.x * 80) - camera_x
+        screen_y = (self.y * 80) - camera_y
+
         if self.tile_type == 'empty':
-            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
         elif self.tile_type == 'border':
-            Tile.sprite_sheet.clip_draw(self.f * 7, self.f * 11, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 7, self.f * 11, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
         elif self.tile_type == 'solid':
-            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
         elif self.tile_type == 'ladder':
-            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, (self.x * 80) - camera_x,(self.y * 80) - camera_y, self.rt, self.rt)
-            Tile.sprite_sheet.clip_draw(self.f * 4, self.f * 10, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 4, self.f * 10, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
         elif self.tile_type == 'spike':
-            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, (self.x * 80) - camera_x,(self.y * 80) - camera_y, self.rt, self.rt)
-            Tile.sprite_sheet.clip_draw(self.f * 4, self.f * 10, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 4, self.f * 10, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
         elif self.tile_type == 'rope':
-            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, (self.x * 80) - camera_x,(self.y * 80) - camera_y, self.rt, self.rt)
-            Tile.rope_sheet.clip_draw(self.f * 5, 0, self.f, self.f, (self.x * 80) - camera_x, (self.y * 80) - camera_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.rope_sheet.clip_draw(self.f * 5, 0, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+
 
     def get_bb(self):
         # 충돌 박스 (bounding box) 정의
@@ -46,29 +55,31 @@ class Tile:
         # 타일 충돌 반응 폭발 구현
         pass
 
+    def update(self):
+        pass
+
 
 class Map:
     def __init__(self, width, height):
-        self.width = width
-        self.height = height
+            self.width = width
+            self.height = height
 
-        self.tiles = {}
-        for x in range(width):
-            for y in range(height):
-                self.tiles[(x, y)] = Tile('empty', x, y)
+            self.tiles = {}
+            for x in range(width):
+                for y in range(height):
+                    tile_type = 'empty'
+                    if x < 3 or y < 3 or x >= width - 3 or y >= height - 3:
+                        tile_type = 'border'
+                    self.tiles[(x, y)] = Tile(tile_type, x, y)
+                    game_world.add_object(self.tiles[(x, y)], 0)  # 타일을 깊이 0에 추가
 
-        for x in range(width):
-            for y in range(height):
-                if x < 3 or y < 3 or x >= width - 3 or y >= height - 3:
-                    self.tiles[(x, y)] = Tile('border', x, y)
+    def draw(self, camera_x=0, camera_y=0):
+        start_x = int(max(camera_x // 80, 0))
+        start_y = int(max(camera_y // 80, 0))
+        end_x = int(min((camera_x + screen_width) // 80 + 1, self.width))
+        end_y = int(min((camera_y + screen_height) // 80 + 1, self.height))
 
-    def draw(self, camera_x, camera_y, screen_width, screen_height):
-        start_x = max(camera_x // 80, 0)
-        start_y = max(camera_y // 80, 0)
-        end_x = min((camera_x + screen_width) // 80 + 1, self.width)
-        end_y = min((camera_y + screen_height) // 80 + 1, self.height)
-
-        for x in range(start_x, end_x):
+        for x in range((start_x), end_x):
             for y in range(start_y, end_y):
                 self.tiles[(x, y)].draw(camera_x, camera_y)
 
@@ -80,3 +91,5 @@ class Map:
         if (x, y) in self.tiles:
             return self.tiles[(x, y)].passable
         return False
+    def update(self):
+        pass

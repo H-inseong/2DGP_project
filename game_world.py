@@ -1,12 +1,17 @@
-from itertools import filterfalse
-from xml.sax import parse
+# game_world.py
+from pico2d import *
+import Player
+import Map
+import Item
 
-world = [[] for _ in range(4)]
+world = [[] for _ in range(4)]  # 깊이별로 객체를 관리 (0~3)
 
-def add_object(o, depth = 0):
+collision_pairs = {}
+
+def add_object(o, depth=0):
     world[depth].append(o)
 
-def add_objects(ol, depth = 0):
+def add_objects(ol, depth=0):
     world[depth] += ol
 
 def update():
@@ -14,18 +19,10 @@ def update():
         for o in layer:
             o.update()
 
-#카메라 이동 메인 로직
-# 카메라 위치 정의
-#camera_x, camera_y = player.x - WIDTH // 2, player.y - HEIGHT // 2
-# 그리기 시, 카메라 위치를 반영
-#draw_x = object.x - camera_x
-#draw_y = object.y - camera_y
-#object.image.draw(draw_x, draw_y)
-
-def render():
+def render(camera_x, camera_y):
     for layer in world:
         for o in layer:
-            o.draw()
+            o.draw(camera_x, camera_y)
 
 def remove_object(o):
     for layer in world:
@@ -34,7 +31,7 @@ def remove_object(o):
             remove_collision_object(o)
             del o
             return
-    raise ValueError('Cannot delete non existing object')
+    raise ValueError('Cannot delete non-existing object')
 
 def clear():
     for layer in world:
@@ -50,12 +47,10 @@ def collide(a, b):
     if bottom_a > top_b: return False
     return True
 
-collision_pairs = {}
-
 def add_collision_pair(group, a, b):
     if group not in collision_pairs:
         print(f'Added new group {group}')
-        collision_pairs[group] = [ [], [] ] # 초기화
+        collision_pairs[group] = [[], []]
     if a:
         collision_pairs[group][0].append(a)
     if b:
@@ -72,6 +67,6 @@ def handle_collisions():
     for group, pairs in collision_pairs.items():
         for a in pairs[0]:
             for b in pairs[1]:
-                if collide(a,b):
+                if collide(a, b):
                     a.handle_collision(group, b)
                     b.handle_collision(group, a)

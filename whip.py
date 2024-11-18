@@ -17,21 +17,21 @@ class Whip:
         self.active = False
         self.aa = False
 
-    def draw(self):
+    def draw(self, x, y):
         if self.direction == 1:
             if int(self.frame) == 3:
                 Whip.image.clip_draw(int(self.frame) * 128, 0, 128, 128,
-                                     self.x - 60 - (6 - int(self.frame) * 15), self.y + 40, 60, 60)
+                                     self.x - 60 - (6 - int(self.frame) * 15) + x, self.y + 40 + y, 60, 60)
             else:
                 Whip.image.clip_draw(int(self.frame) * 128, 0, 128, 128,
-                                 self.x - 60 - (6 - int(self.frame) * 15), self.y, 60, 60)
+                                 self.x - 60 - (6 - int(self.frame) * 15)+ x, self.y+ y, 60, 60)
         else:
             if int(self.frame) == 3:
                 Whip.image.clip_composite_draw(int(self.frame) * 128, 0, 128, 128, 0, 'h',
-                                     self.x + 60 + (6 - int(self.frame) * 15) ,self.y + 40, 60, 60)
+                                     self.x + 60 + (6 - int(self.frame) * 15) + x,self.y + 40+ y, 60, 60)
             else:
                 Whip.image.clip_composite_draw(int(self.frame) * 128, 0, 128, 128, 0, 'h',
-                                           self.x + 60 + (6 - int(self.frame) * 15) ,self.y, 60, 60)
+                                           self.x + 60 + (6 - int(self.frame) * 15) + x,self.y+ y, 60, 60)
         if int(self.frame) == 5:
             aa = True
         draw_rectangle(*self.get_bb())
@@ -57,3 +57,6 @@ class Whip:
         self.active = True
         self.frame = 0
         self.aa = False
+
+    def handle_collision(self, group, other):
+        pass
