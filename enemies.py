@@ -50,7 +50,10 @@ class Snake:
         if self.dir < 0:
             Snake.image.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.color + self.f_size + 28, self.f_size, self.f_size, 0, 'h', self.x - x, self.y - y, 80, 80)
         else:
-            Snake.image.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.color + self.f_size + 28, self.f_size, self.f_size, 0, 'h', self.x - x, self.y - y, 80, 80)
+            Snake.image.clip_draw(int(self.frame) * self.f_size,
+                                  self.f_size * self.color + self.f_size + 28,
+                                  self.f_size, self.f_size,
+                                  self.x - x, self.y - y )
         draw_rectangle(*self.get_bb())
 
     def handle_event(self, event):

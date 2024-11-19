@@ -73,7 +73,7 @@ class Player:
         self.left_pressed = False
         self.right_pressed = False
 
-        self.hp = 4
+        self.hp = 40
         self.bomb = 4
         self.rope = 4
         self.gold = 0
@@ -183,6 +183,8 @@ class Player:
                         self.hp -= 1
         elif group == 'Player:Monster':
             self.hp -= 1
+            if self.hp < 1:
+                self.state_machine.start(Dead)
 
     def resolve_collision(self, tile):
         player_bb = self.get_bb()
@@ -594,8 +596,7 @@ class Dead:
 
     @staticmethod
     def do(player):
-        player.frame = (
-                                   player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
+        player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
 
         if get_time() - player.st_time > 5:
             game_framework.quit()  # 게임 종료 또는 다른 동작 수행

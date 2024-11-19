@@ -19,7 +19,7 @@ class Tile:
         self.x = x
         self.y = y
         self.f = 128
-        self.rt = 80
+        self.rt = 100
         self.passable = self.tile_type not in ['solid', 'border']
 
     def draw(self, camera_x=0, camera_y=0):
