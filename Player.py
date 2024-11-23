@@ -23,7 +23,7 @@ FRAMES_PER_ACTION = 8
 
 DEBUG = True
 
-GRAVITY = -500
+GRAVITY = -777
 
 class Player:
     image = None
@@ -43,14 +43,17 @@ class Player:
                 Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run,
                        space_down: Jump, down_down: Crouch, up_down: ClimbMove,
                        z_down: Attack},
-                Run: {right_down: Run, left_down: Run, right_up: Idle, left_up: Idle, space_down: Jump, down_down: CrouchMove, z_down: Attack},
+                Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle,
+                      space_down: Jump, down_down: CrouchMove, z_down: Attack},
+
                 Crouch: {down_up: Idle, left_down: CrouchMove, right_down:CrouchMove, down_down: Crouch, z_down: Attack, space_down: Jump},
-                CrouchMove : {left_up: Crouch, right_up:Crouch, left_down: CrouchMove, right_down:CrouchMove, down_up: Run, space_down: Jump},
-                Climb: {up_up: Climb, up_down: ClimbMove, down_up: Climb, down_down: ClimbMove, z_down: Idle},
-                ClimbMove: {up_up: Climb, up_down: ClimbMove, down_up:Climb, down_down: ClimbMove},
+                CrouchMove : {left_up: Crouch, right_up:Crouch, left_down: Crouch, right_down:Crouch, down_up: Run, space_down: Jump},
+                Climb: {up_up: ClimbMove, up_down: ClimbMove, down_up: ClimbMove, down_down: ClimbMove, z_down: Idle},
+                ClimbMove: {up_up: Climb, up_down: Climb, down_up:Climb, down_down: Climb},
+
                 Stunned: { time_out: Idle },
-                Attack: { right_up: Attack, left_up: Attack, right_down: Attack, left_down: Attack, space_down: Jump, time_out: Idle},
-                Jump: { right_down: Jump, left_down: Jump , landed: Idle}
+                Attack: { right_up: Attack, left_up: Attack, right_down: Attack, left_down: Attack, space_down: Jump, time_out: Run},
+                Jump: { right_down: Jump, left_down: Jump , landed: Run}
             }
         )
         #f = frame
@@ -216,6 +219,7 @@ class Player:
             self.land = True
             self.state_machine.add_event(('landed', 0))
 
+
     def get_bb(self):
         if self.state_machine.cur_state == Crouch or self.state_machine.cur_state == CrouchMove:
             return self.x - 30, self.y - 33, self.x + 30, self.y
@@ -236,7 +240,7 @@ class Idle:
     @staticmethod
     def enter(player, e):
         if start_event(e):
-            player.face_dir = 1
+            pass
         elif right_down(e) or left_up(e):
             player.face_dir = -1
         elif left_down(e) or right_up(e):
@@ -286,6 +290,7 @@ class Run:
         player.act = 11
         player.frame = 0
         player.maxframe = 8
+
         if player.dirx == 0:
             player.state_machine.start(Idle)
 
@@ -295,9 +300,9 @@ class Run:
 
     @staticmethod
     def do(player):
-        player.frame = (
-                                   player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
+        player.frame = (player.frame + 8 * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
         player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time
+        player.whip.draw(player.view_x, player.view_y)
 
     @staticmethod
     def draw(player):
@@ -505,8 +510,7 @@ class Stunned:
 
     @staticmethod
     def exit(player, e):
-        if space_down(e):
-            player.jump()
+        pass
 
     @staticmethod
     def do(player):
@@ -661,7 +665,7 @@ class Jump:
         @staticmethod
         def enter(player, e):
             if not player.jumped and space_down(e):
-                player.velocity_y = 300  # 점프 초기 속도 (픽셀/초)
+                player.velocity_y = 400  # 점프 초기 속도 (픽셀/초)
                 player.jumped = True
                 player.land = False
 
@@ -675,10 +679,10 @@ class Jump:
 
         @staticmethod
         def do(player):
-            player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % (player.maxframe + 1)
+            player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time
+            player.frame = (player.frame + 7 * ACTION_PER_TIME * game_framework.frame_time) % (player.maxframe + 1)
             if player.frame > 7:
                 player.frame = 7
-            player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time
         @staticmethod
         def draw(player):
             if player.face_dir == 1:
@@ -706,12 +710,9 @@ class Attack:
             player.dirx, player.face_dir = 1, 1
         elif left_down(e):  # 왼쪽으로 RUN
             player.dirx, player.face_dir = -1, -1
-        elif right_up(e):
-            player.dirx = 0
-        elif left_up(e):
-            player.dirx = 0
 
         player.act = 7
+
         if not player.whip.active:
             player.frame = 0
         player.maxframe = 6
@@ -733,12 +734,12 @@ class Attack:
         player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time
         player.frame = (player.frame + 6 * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
         player.whip.update(player.x, player.y, player.face_dir)
+
         if int(player.frame) == 0 and player.aa:
             player.state_machine.add_event(('TIME_OUT', 0))
 
     @staticmethod
     def draw(player):
-        player.whip.draw(player.view_x, player.view_y)
         if player.face_dir == 1:
             player.image.clip_draw(int(player.frame) * player.f_w,
                                    player.f_h * player.act + 64,
@@ -748,13 +749,14 @@ class Attack:
                                    player.y - player.view_y, )
         else:
             player.image.clip_composite_draw(int(player.frame) * player.f_w,
-                                             player.f_w * player.act + 64,
+                                             player.f_h * player.act + 64,
                                              player.f_w,
-                                             player.f_w,
+                                             player.f_h,
                                              0, 'h',
                                              player.x - player.view_x,
                                              player.y - player.view_y,
                                              80,
                                              80)
+        player.whip.draw(player.view_x, player.view_y)
         if int(player.frame) == 5:
             player.aa = True

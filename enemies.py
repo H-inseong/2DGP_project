@@ -65,7 +65,7 @@ class Snake:
 
 
     def get_bb(self):
-        return self.x - self.f_size/2 , self.y - self.f_size/2 , self.x + self.f_size/2 , self.y + self.f_size/2
+        return self.x - self.f_size/3 , self.y - self.f_size/2 , self.x + self.f_size/3 , self.y + self.f_size/3
 
 class Boss:
     images = None
@@ -112,4 +112,4 @@ class Boss:
         pass
 
     def get_bb(self):
-        return self.x - self.f_size / 2, self.y - self.f_size / 2, self.x + self.f_size / 2, self.y + self.f_size / 2
+        return self.x - self.f_size/3 , self.y - self.f_size/2 , self.x + self.f_size/3 , self.y + self.f_size/3
