@@ -42,7 +42,7 @@ class Player:
             {
                 Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run,
                        space_down: Jump, down_down: Crouch, up_down: ClimbMove,
-                       z_down: Attack},
+                       z_down: Attack, x_down: Idle},
                 Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle,
                       space_down: Jump, down_down: CrouchMove, z_down: Attack},
 
@@ -77,8 +77,8 @@ class Player:
         self.right_pressed = False
 
         self.hp = 40
-        self.bomb = 4
-        self.rope = 4
+        self.bomb_count = 4
+        self.rope_count = 4
         self.gold = 0
 
         self.aa = False
@@ -120,7 +120,7 @@ class Player:
 
     def draw(self, a,b):
         self.state_machine.draw()
-        self.ui.draw(self.hp, self.bomb, self.rope, self.gold)
+        self.ui.draw(self.hp, self.bomb_count, self.rope_count, self.gold)
         if DEBUG:
             bb = self.get_bb()
             draw_rectangle(bb[0] - self.view_x, bb[1] - self.view_y, bb[2] - self.view_x, bb[3] - self.view_y)
@@ -172,15 +172,15 @@ class Player:
                 case ('Gold Bars'):
                     self.gold += other.value
                 case ('bomb'):
-                    self.bomb += other.value
+                    self.bomb_count += other.value
                 case ('bombs'):
-                    self.bomb += other.value
+                    self.bomb_count += other.value
                 case ('rope'):
                     self.gold += other.value
                 case ('spike shoes'):
                     self.gold += other.value
                 case ('spring shoes'):
-                    self.bomb += other.value
+                    self.bomb_count += other.value
                 case ('arrow'):
                     if other.dx != 0:
                         self.hp -= 1
@@ -228,9 +228,10 @@ class Player:
 
         return self.x - 30, self.y - 33, self.x + 30, self.y + 30
 
-    def bomb(self):
-        if self.bomb > 0:
-            self.bomb -= 1
+    def use_bomb(self):
+        print('work')
+        if self.bomb_count > 0:
+            self.bomb_count -= 1
             bomb = Bomb(self.x, self.y, self.face_dir * 10)
             game_world.add_object(bomb)
             game_world.add_collision_pair('items:Map', None, bomb)
@@ -245,7 +246,8 @@ class Idle:
             player.face_dir = -1
         elif left_down(e) or right_up(e):
             player.face_dir = 1
-
+        if x_down(e):
+            player.use_bomb()
         player.act = 11
         player.frame = 0
         player.maxframe = 1

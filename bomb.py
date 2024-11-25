@@ -15,8 +15,8 @@ class Bomb:
         self.x, self.y, self.velocity = x, y, velocity
         self.frame = 0
 
-    def draw(self):
-        self.image.clip_draw(128 * int(self.frame), 128 * 10, 128, 128, 50/128 * 100, 50/128 * 100)
+    def draw(self,vx, vy):
+        self.image.clip_draw(128 * int(self.frame), 128 * 10, 128, 128, self.x - vx, self.y - vy ,50, 50)
         draw_rectangle(*self.get_bb())
 
     def update(self):
