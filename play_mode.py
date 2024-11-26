@@ -12,6 +12,14 @@ def init():
     game_world.add_object(player, 1)
 
     map_obj = Map(46, 38)  # 맵 생성 (가로 46 타일, 세로 38 타일 예시)
+    map_obj.add_tile('ladder', 10, 10)
+    map_obj.add_tile('solid', 10, 9)
+    map_obj.add_tile('solid', 9, 9)
+    map_obj.add_tile('rope_head', 10, 8)
+    map_obj.add_tile('rope', 10, 7)
+    map_obj.add_tile('rope', 10, 6)
+    map_obj.add_tile('spike', 4, 4)
+    map_obj.add_tile('spike', 5, 4)
     camera_x, camera_y = 0, 0
 
     s = Snake(0)
@@ -21,8 +29,9 @@ def init():
 
     game_world.add_collision_pair('Player:Map', player, None)  # 그룹 A에 플레이어 추가
     for tile in map_obj.tiles.values():  # Tile 객체를 순회
-        game_world.add_collision_pair('Player:Map', None, tile)
-
+        if tile.tile_type != 'empty':
+            game_world.add_collision_pair('Player:Map', None, tile)
+            game_world.add_collision_pair('items:Map', None, tile)
 def finish():
     game_world.clear()
 
@@ -59,3 +68,6 @@ def pause():
 
 def resume():
     pass
+
+def explosive(x,y):
+    map

@@ -19,7 +19,7 @@ class Tile:
         self.x = x
         self.y = y
         self.f = 128
-        self.rt = 100
+        self.rt = 95
         self.passable = self.tile_type not in ['solid', 'border']
 
     def draw(self, camera_x=0, camera_y=0):
@@ -31,13 +31,16 @@ class Tile:
         elif self.tile_type == 'border':
             Tile.sprite_sheet.clip_draw(self.f * 7, self.f * 11, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
         elif self.tile_type == 'solid':
-            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 0, self.f * 11, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
         elif self.tile_type == 'ladder':
             Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
-            Tile.sprite_sheet.clip_draw(self.f * 4, self.f * 10, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 4, self.f * 10, self.f, self.f, screen_x, screen_y, 80, 80)
         elif self.tile_type == 'spike':
             Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
-            Tile.sprite_sheet.clip_draw(self.f * 4, self.f * 10, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 5, self.f * 2, self.f, self.f, screen_x, screen_y, 80, 80)
+        elif self.tile_type == 'rope_head':
+            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.rope_sheet.clip_draw(self.f * 11, 0, self.f, self.f, screen_x + 1, screen_y + 3, self.rt, self.rt)
         elif self.tile_type == 'rope':
             Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
             Tile.rope_sheet.clip_draw(self.f * 5, 0, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
@@ -85,8 +88,9 @@ class Map:
 
     def add_tile(self, tile_type, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
+            game_world.remove_object(self.tiles[(x, y)])
             self.tiles[(x, y)] = Tile(tile_type, x, y)
-
+            game_world.add_object(self.tiles[(x, y)], 0)
     def is_passable(self, x, y):
         if (x, y) in self.tiles:
             return self.tiles[(x, y)].passable

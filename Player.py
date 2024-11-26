@@ -4,6 +4,7 @@ import UI
 import game_framework
 import game_world
 from Map import Tile
+from rope import Rope
 from state_machine import *
 from whip import Whip
 from bomb import Bomb
@@ -42,7 +43,7 @@ class Player:
             {
                 Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run,
                        space_down: Jump, down_down: Crouch, up_down: ClimbMove,
-                       z_down: Attack, x_down: Idle},
+                       z_down: Attack, x_down: Idle, c_down: Idle},
                 Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle,
                       space_down: Jump, down_down: CrouchMove, z_down: Attack},
 
@@ -76,6 +77,7 @@ class Player:
         self.left_pressed = False
         self.right_pressed = False
 
+
         self.hp = 40
         self.bomb_count = 4
         self.rope_count = 4
@@ -85,10 +87,13 @@ class Player:
         self.ladder = False
         self.jumped = False
         self.land = True
+        self.move_stage = False
 
         self.velocity_y = 0  # 초기 수직 속도
 
     def update(self):
+        if self.hp < 1:
+            self.state_machine.start(Dead)
         if self.left_pressed and not self.right_pressed:
             self.dirx = -1
             self.face_dir = -1
@@ -99,7 +104,8 @@ class Player:
             self.dirx = 0
 
         if not self.land:
-            self.velocity_y += GRAVITY * game_framework.frame_time
+            if self.velocity_y > -777:
+                self.velocity_y += GRAVITY * game_framework.frame_time
             self.y += self.velocity_y * game_framework.frame_time
 
         self.state_machine.update()
@@ -154,6 +160,7 @@ class Player:
 
     def handle_collision(self, group, other):
         if group == 'Player:Map':
+
             if isinstance(other, Tile):
                 if other.tile_type in ['solid', 'border']:
                     self.resolve_collision(other)
@@ -162,8 +169,11 @@ class Player:
                         self.hp = 0
                         self.state_machine.start(Dead)
 
-            elif other.tile_type == 'ladder':
+                elif other.tile_type == 'ladder':
                     self.ladder = True
+
+                elif other.tile_type == 'door':
+                    self.move_stage = True
 
         elif group == 'Player:Item':
             match (other.name):
@@ -186,8 +196,7 @@ class Player:
                         self.hp -= 1
         elif group == 'Player:Monster':
             self.hp -= 1
-            if self.hp < 1:
-                self.state_machine.start(Dead)
+
 
     def resolve_collision(self, tile):
         player_bb = self.get_bb()
@@ -229,12 +238,18 @@ class Player:
         return self.x - 30, self.y - 33, self.x + 30, self.y + 30
 
     def use_bomb(self):
-        print('work')
         if self.bomb_count > 0:
             self.bomb_count -= 1
             bomb = Bomb(self.x, self.y, self.face_dir * 10)
             game_world.add_object(bomb)
-            game_world.add_collision_pair('items:Map', None, bomb)
+            game_world.add_collision_pair('items:Map', bomb, None)
+
+    def use_rope(self):
+        if self.rope_count > 0:
+            self.rope_count -= 1
+            rope = Rope(self.x, self.y, self.face_dir * 10)
+            game_world.add_object(rope)
+            game_world.add_collision_pair('items:Map', rope, None)
 
 
 class Idle:
@@ -246,8 +261,10 @@ class Idle:
             player.face_dir = -1
         elif left_down(e) or right_up(e):
             player.face_dir = 1
-        if x_down(e):
+        elif x_down(e):
             player.use_bomb()
+        elif c_down(e):
+            player.use_rope()
         player.act = 11
         player.frame = 0
         player.maxframe = 1
@@ -341,7 +358,7 @@ class Crouch:
         if player.frame != 2:
             player.frame = 0
         player.maxframe = 2
-        player.c_time = get_time()
+
 
     @staticmethod
     def exit(player, e):
@@ -355,10 +372,7 @@ class Crouch:
                         player.maxframe + 1)
             if player.frame > 2:
                 player.frame = 2
-        if get_time() - player.c_time > 3:
-            player.state_machine.add_event(('TIME_OUT', 0))
-            player.view_down = True
-            # 시야가 아래로 이동
+
 
     @staticmethod
     def draw(player):
@@ -430,6 +444,12 @@ class CrouchMove:
 class Climb:
     @staticmethod
     def enter(player, e):
+        if player.ladder != True:
+            player.state_machine.start(Idle)
+
+        player.land = True
+        player.jumped = False
+
         if start_event(e):
             player.face_dir = 1
         elif right_down(e) or left_up(e):
@@ -445,8 +465,6 @@ class Climb:
             player.act = 3
             player.frame = 0
             player.maxframe = 5
-            player.up_time = get_time()
-
     @staticmethod
     def exit(player, e):
         player.view_up = False
@@ -455,11 +473,6 @@ class Climb:
     def do(player):
         if player.frame < 4:
             player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
-
-
-        if get_time() - player.up_time > 3:
-            player.state_machine.add_event(('TIME_OUT', 0))
-            player.view_up = False
 
     @staticmethod
     def draw(player):
@@ -474,6 +487,10 @@ class Climb:
 class ClimbMove:
     @staticmethod
     def enter(player, e):
+        if player.ladder != True:
+            player.state_machine.start(Idle)
+        player.land = True
+        player.jumped = False
         if up_down(e) or down_up(e):
             player.diry = 1
         elif down_down(e) or up_up(e):
@@ -489,6 +506,8 @@ class ClimbMove:
 
     @staticmethod
     def do(player):
+        if player.ladder != True:
+            player.state_machine.start(Idle)
         player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
         player.y += player.diry * RUN_SPEED_PPS * game_framework.frame_time
 

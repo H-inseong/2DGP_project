@@ -8,31 +8,28 @@ from state_machine import landed
 TIME_PER_ACTION = 1
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 3
-GRAVITY = -100
-class Bomb:
+
+class Rope:
     image = None
     def __init__(self, x, y, velocity = 1):
-        if Bomb.image == None:
-            Bomb.image = load_image('items_sheet.png')
-        self.x, self.y, self.velocity = x, y, velocity * 120
+        if Rope.image == None:
+            Rope.image = load_image('rope.png')
+        self.x, self.y, self.velocity = x // 80 * 80, y // 80 * 80, velocity * 127
         self.frame = 0
         self.land = False
 
     def draw(self,vx, vy):
-        self.image.clip_draw(128 * int(self.frame), 128 * 10, 128, 128, self.x - vx, self.y - vy ,80, 80)
+        self.image.clip_draw(128 * 10, 0, 128, 128, self.x - vx, self.y - vy ,80, 80)
         draw_rectangle(*self.get_bb())
 
-    def update(self):
-        self.x += self.velocity * game_framework.frame_time
-        if self.velocity != 0:
-            self.velocity = (abs(self.velocity) - 25) * self.velocity / abs(self.velocity)
-        if not self.land:
-            self.y += GRAVITY * game_framework.frame_time
 
-        self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % (3 + 1)
-        if self.frame > 3:
-            game_world.remove_object(self)
-            #폭발 explosion()
+    def update(self):
+        self.y += self.velocity * game_framework.frame_time
+        if self.velocity > 0:
+            self.velocity = (abs(self.velocity) - 25) * self.velocity / abs(self.velocity)
+        else:
+            self.velocity = 0
+
 
     def get_bb(self):
         return self.x - 20, self.y - 20, self.x + 20, self.y + 20
