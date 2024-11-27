@@ -26,7 +26,7 @@ class Rope:
     def update(self):
         self.y += self.velocity * game_framework.frame_time
         if self.velocity > 0:
-            self.velocity = (abs(self.velocity) - 25) * self.velocity / abs(self.velocity)
+            self.velocity = (abs(self.velocity) - 25 * game_framework.frame_time) * self.velocity / abs(self.velocity)
         else:
             self.velocity = 0
 

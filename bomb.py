@@ -3,6 +3,7 @@ from tkinter.constants import SEL_FIRST
 from pico2d import *
 import game_world
 import game_framework
+import play_mode
 from state_machine import landed
 
 TIME_PER_ACTION = 1
@@ -32,7 +33,7 @@ class Bomb:
         self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % (3 + 1)
         if self.frame > 3:
             game_world.remove_object(self)
-            #폭발 explosion()
+            play_mode.explosive(self.x // 80, self.y // 80)
 
     def get_bb(self):
         return self.x - 20, self.y - 20, self.x + 20, self.y + 20

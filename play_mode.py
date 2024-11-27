@@ -7,7 +7,7 @@ from enemies import Snake
 from whip import Whip
 
 def init():
-    global player, map, camera_x, camera_y
+    global player, map_obj, camera_x, camera_y
     player = Player(240, 240)
     game_world.add_object(player, 1)
 
@@ -15,11 +15,17 @@ def init():
     map_obj.add_tile('ladder', 10, 10)
     map_obj.add_tile('solid', 10, 9)
     map_obj.add_tile('solid', 9, 9)
+    map_obj.add_tile('solid', 10, 5)
+    map_obj.add_tile('solid', 9, 5)
+    map_obj.add_tile('solid', 10, 4)
+    map_obj.add_tile('solid', 9, 4)
+
     map_obj.add_tile('rope_head', 10, 8)
     map_obj.add_tile('rope', 10, 7)
     map_obj.add_tile('rope', 10, 6)
     map_obj.add_tile('spike', 4, 4)
     map_obj.add_tile('spike', 5, 4)
+    map_obj.add_tile('solid', 5, 3)
     camera_x, camera_y = 0, 0
 
     s = Snake(0)
@@ -69,5 +75,26 @@ def pause():
 def resume():
     pass
 
-def explosive(x,y):
-    map
+def explosive(x, y):
+    global map_obj  # map_obj를 전역 변수로 사용
+
+    affected_tiles = []
+
+    for dx in range(-1, 2):  # -1, 0, 1
+        for dy in range(-1, 2):
+            affected_tiles.append((x + dx, y + dy))
+
+    # 각 면의 가운데 칸에서 한 칸 더 확장된 타일 추가
+    more = [ (x, y + 2), (x, y - 2), (x - 2, y), (x + 2, y) ]
+    affected_tiles.extend(more)
+    affected_tiles = list(set(affected_tiles))
+
+    for tile_pos in affected_tiles:
+        try:
+            tile = map_obj.tiles[tile_pos]
+            if tile.tile_type in ('solid', 'spike'):
+                map_obj.add_tile('empty', tile_pos[0], tile_pos[1])
+                print(f"Tile at {tile_pos} changed to 'empty'.")
+        except KeyError:
+            # 지정된 좌표에 타일이 존재하지 않는 경우 무시
+            print(f"Tile at {tile_pos} does not exist. Skipping.")

@@ -88,9 +88,13 @@ class Map:
 
     def add_tile(self, tile_type, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
+
             game_world.remove_object(self.tiles[(x, y)])
+
             self.tiles[(x, y)] = Tile(tile_type, x, y)
+
             game_world.add_object(self.tiles[(x, y)], 0)
+
     def is_passable(self, x, y):
         if (x, y) in self.tiles:
             return self.tiles[(x, y)].passable
