@@ -110,19 +110,8 @@ class Player:
 
         self.state_machine.update()
 
-        if self.x < 1920 // 2:
-            self.view_x = 0
-        elif self.x > 3440 - (1920 // 2):
-            self.view_x = 3440 - 1920
-        else:
-            self.view_x = self.x - (1920 // 2)
-
-        if self.y < 960 // 2:
-            self.view_y = 0
-        elif self.y > 3040 - (960 // 2):
-            self.view_y = 3040 - 960
-        else:
-            self.view_y = self.y - (960 // 2)
+        self.view_x = clamp(self.x - 960, 0, 1520)
+        self.view_y = clamp(self.y - 480, 0, 2080)
 
     def draw(self, a,b):
         self.state_machine.draw()
@@ -251,6 +240,8 @@ class Player:
             game_world.add_object(rope)
             game_world.add_collision_pair('items:Map', rope, None)
 
+def clamp(value, min_value, max_value):
+    return max(min_value, min(value, max_value))
 
 class Idle:
     @staticmethod

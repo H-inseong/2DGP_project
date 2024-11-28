@@ -4,7 +4,6 @@ import game_world
 from Map import Map
 from Player import Player
 from enemies import Snake
-from whip import Whip
 
 def init():
     global player, map_obj, camera_x, camera_y
@@ -47,8 +46,24 @@ def handle_events():
     for event in events:
         if event.type == pico2d.SDL_QUIT:
             game_framework.quit()
-        elif event.type == pico2d.SDL_KEYDOWN and event.key == pico2d.SDLK_ESCAPE:
-            game_framework.quit()
+        elif event.type == pico2d.SDL_KEYDOWN:
+            if event.key == pico2d.SDLK_ESCAPE:
+                game_framework.quit()
+            else:
+                player.handle_event(event)
+        elif event.type == pico2d.SDL_MOUSEBUTTONDOWN:
+             mouse_x, mouse_y = event.x, 960 - event.y  # 화면 좌표를 맵 좌표로 변환
+
+             world_x = camera_x + mouse_x
+             world_y = camera_y + mouse_y
+
+             tile_x = world_x // 80
+             tile_y = world_y // 80
+
+             if event.button == 1:  # 왼쪽 마우스 버튼 클릭
+                 set_solid_tile(tile_x, tile_y, 'solid')
+             elif event.button == 3:  # 오른쪽 마우스 버튼 클릭 (선택 사항)
+                 set_solid_tile(tile_x, tile_y, 'empty')
         else:
             player.handle_event(event)
 
@@ -98,3 +113,13 @@ def explosive(x, y):
         except KeyError:
             # 지정된 좌표에 타일이 존재하지 않는 경우 무시
             print(f"Tile at {tile_pos} does not exist. Skipping.")
+
+
+def set_solid_tile(x, y, tile_type):
+    global map_obj
+    tile = map_obj.tiles[(x, y)]
+        # 변경 가능한 타일 타입을 명확히 지정 (예: 'empty', 'spike', 'rope', 'rope_head' 등)
+    map_obj.add_tile(tile_type, x, y)
+
+    game_world.add_collision_pair('Player:Map', None, tile)
+    game_world.add_collision_pair('items:Map', None, tile)

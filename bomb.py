@@ -1,15 +1,17 @@
 from tkinter.constants import SEL_FIRST
 
 from pico2d import *
+from pygame.draw_py import draw_pixel
+
 import game_world
 import game_framework
 import play_mode
 from state_machine import landed
 
-TIME_PER_ACTION = 1
+TIME_PER_ACTION = 2
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 3
-GRAVITY = -100
+GRAVITY = -50
 class Bomb:
     image = None
     def __init__(self, x, y, velocity = 1):
@@ -21,7 +23,7 @@ class Bomb:
 
     def draw(self,vx, vy):
         self.image.clip_draw(128 * int(self.frame), 128 * 10, 128, 128, self.x - vx, self.y - vy ,80, 80)
-        draw_rectangle(*self.get_bb())
+        self.image.clip_draw(128 * int(self.frame), 128 * 10, 128, 128, self.x, self.y, 50, 50)
 
     def update(self):
         self.x += self.velocity * game_framework.frame_time
@@ -32,8 +34,8 @@ class Bomb:
 
         self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % (3 + 1)
         if self.frame > 3:
-            game_world.remove_object(self)
             play_mode.explosive(self.x // 80, self.y // 80)
+            game_world.remove_object(self)
 
     def get_bb(self):
         return self.x - 20, self.y - 20, self.x + 20, self.y + 20
@@ -57,11 +59,11 @@ class Bomb:
 
         if min_overlap == overlap_left:
             self.x -= overlap_left
-            self.velocity = -self.velocity
+            self.velocity = -self.velocity/2
 
         elif min_overlap == overlap_right:
             self.x += overlap_right
-            self.velocity = -self.velocity
+            self.velocity = -self.velocity/2
 
         elif min_overlap == overlap_bottom:
             self.y -= overlap_bottom

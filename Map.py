@@ -88,12 +88,14 @@ class Map:
 
     def add_tile(self, tile_type, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
-
-            game_world.remove_object(self.tiles[(x, y)])
-
-            self.tiles[(x, y)] = Tile(tile_type, x, y)
-
-            game_world.add_object(self.tiles[(x, y)], 0)
+            current_tile = self.tiles.get((x, y))
+            game_world.remove_object(current_tile)
+            new_tile = Tile(tile_type, x, y)
+            self.tiles[(x, y)] = new_tile
+            game_world.add_object(new_tile, 0)
+            if tile_type != 'empty':
+                game_world.add_collision_pair('Player:Map', None, new_tile)
+                game_world.add_collision_pair('items:Map', None, new_tile)
 
     def is_passable(self, x, y):
         if (x, y) in self.tiles:
