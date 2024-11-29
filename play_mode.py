@@ -7,7 +7,7 @@ from enemies import Snake
 
 def init():
     global player, map_obj, camera_x, camera_y
-    player = Player(240, 240)
+    player = Player(80 * 5, 80 * 4)
     game_world.add_object(player, 1)
 
     map_obj = Map(46, 38)  # 맵 생성 (가로 46 타일, 세로 38 타일 예시)
@@ -37,6 +37,8 @@ def init():
         if tile.tile_type != 'empty':
             game_world.add_collision_pair('Player:Map', None, tile)
             game_world.add_collision_pair('items:Map', None, tile)
+
+
 def finish():
     game_world.clear()
 
@@ -49,10 +51,19 @@ def handle_events():
         elif event.type == pico2d.SDL_KEYDOWN:
             if event.key == pico2d.SDLK_ESCAPE:
                 game_framework.quit()
+
+            elif event.key == pico2d.SDLK_o:  # 'o' 키로 저장
+                map_obj.save_map("current_map.csv")
+            elif event.key == pico2d.SDLK_p:  # 'p' 키로 로드
+                map_obj.load_map("current_map.csv")
+
+            elif event.key == pico2d.SDLK_UP:
+                if player.move_stage:  # door 위에서 위쪽 화살표 입력
+                    load_next_stage()
             else:
                 player.handle_event(event)
         elif event.type == pico2d.SDL_MOUSEBUTTONDOWN:
-             mouse_x, mouse_y = event.x, 960 - event.y  # 화면 좌표를 맵 좌표로 변환
+             mouse_x, mouse_y = event.x + 40, 960 - event.y + 40  # 화면 좌표를 맵 좌표로 변환
 
              world_x = camera_x + mouse_x
              world_y = camera_y + mouse_y
@@ -78,9 +89,10 @@ def draw():
     pico2d.clear_canvas()
     if player.view_down == True:
         game_world.render(camera_x, camera_y - 240)
-    if player.view_down == True:
+    elif player.view_up == True:
         game_world.render(camera_x, camera_y + 240)
-    game_world.render(camera_x, camera_y)
+    else:
+        game_world.render(camera_x, camera_y)
     pico2d.update_canvas()
 
 
@@ -92,9 +104,7 @@ def resume():
 
 def explosive(x, y):
     global map_obj  # map_obj를 전역 변수로 사용
-
     affected_tiles = []
-
     for dx in range(-1, 2):  # -1, 0, 1
         for dy in range(-1, 2):
             affected_tiles.append((x + dx, y + dy))
@@ -103,17 +113,22 @@ def explosive(x, y):
     more = [ (x, y + 2), (x, y - 2), (x - 2, y), (x + 2, y) ]
     affected_tiles.extend(more)
     affected_tiles = list(set(affected_tiles))
-
     for tile_pos in affected_tiles:
-        try:
-            tile = map_obj.tiles[tile_pos]
-            if tile.tile_type in ('solid', 'spike'):
-                map_obj.add_tile('empty', tile_pos[0], tile_pos[1])
-                print(f"Tile at {tile_pos} changed to 'empty'.")
-        except KeyError:
-            # 지정된 좌표에 타일이 존재하지 않는 경우 무시
-            print(f"Tile at {tile_pos} does not exist. Skipping.")
+        tile = map_obj.tiles[tile_pos]
+        if tile.tile_type in ('solid', 'spike'):
+            map_obj.add_tile('empty', tile_pos[0], tile_pos[1])
 
+def create_rope(self, tile_x, tile_y):
+    global map_obj
+    map_obj.add_tile('rope_head', tile_x, tile_y)
+    for i in range(1, 8):
+        next_y = tile_y - i
+        if (tile_x, next_y) in map_obj.tiles:
+            tile = map_obj.tiles[(tile_x, next_y)]
+            if tile.tile_type == 'empty':
+                map_obj.add_tile('rope', tile_x, next_y)
+            else:
+                break
 
 def set_solid_tile(x, y, tile_type):
     global map_obj
@@ -121,5 +136,26 @@ def set_solid_tile(x, y, tile_type):
         # 변경 가능한 타일 타입을 명확히 지정 (예: 'empty', 'spike', 'rope', 'rope_head' 등)
     map_obj.add_tile(tile_type, x, y)
 
-    game_world.add_collision_pair('Player:Map', None, tile)
-    game_world.add_collision_pair('items:Map', None, tile)
+def save_current_state():
+    global player, player_state
+    player_state = {
+        'hp': player.hp,
+        'bomb_count': player.bomb_count,
+        'rope_count': player.rope_count,
+        'gold': player.gold
+    }
+
+def restore_player_state():
+    global player, player_state
+    player.hp = player_state.get('hp', 40)
+    player.bomb_count = player_state.get('bomb_count', 4)
+    player.rope_count = player_state.get('rope_count', 4)
+    player.gold = player_state.get('gold', 0)
+
+def load_next_stage():
+    global player, map_obj
+    save_current_state()
+    game_world.clear()
+    map_obj = Map(46, 38)
+    player.x, player.y = 240, 240
+    game_world.add_object(player, 1)

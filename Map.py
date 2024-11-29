@@ -31,7 +31,7 @@ class Tile:
         elif self.tile_type == 'border':
             Tile.sprite_sheet.clip_draw(self.f * 7, self.f * 11, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
         elif self.tile_type == 'solid':
-            Tile.sprite_sheet.clip_draw(self.f * 0, self.f * 11, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw(self.f * 0, self.f * 11, self.f, self.f, screen_x, screen_y, 80, 80)
         elif self.tile_type == 'ladder':
             Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
             Tile.sprite_sheet.clip_draw(self.f * 4, self.f * 10, self.f, self.f, screen_x, screen_y, 80, 80)
@@ -87,6 +87,10 @@ class Map:
                 self.tiles[(x, y)].draw(camera_x, camera_y)
 
     def add_tile(self, tile_type, x, y):
+        """
+
+        :rtype: object
+        """
         if 0 <= x < self.width and 0 <= y < self.height:
             current_tile = self.tiles.get((x, y))
             game_world.remove_object(current_tile)
@@ -103,3 +107,22 @@ class Map:
         return False
     def update(self):
         pass
+
+    def save_map(self, filename):
+        with open(filename, 'w') as file:
+            for y in range(self.height):
+                row = []
+                for x in range(self.width):
+                    tile = self.tiles[(x, y)]
+                    row.append(tile.tile_type)
+                file.write(','.join(row) + '\n')
+        print(f"Map saved to {filename}")
+
+    def load_map(self, filename):
+        with open(filename, 'r') as file:
+            lines = file.readlines()
+            for y, line in enumerate(lines):
+                tile_types = line.strip().split(',')
+                for x, tile_type in enumerate(tile_types):
+                    self.add_tile(tile_type, x, self.height - y - 1)  # 상단이 0,0 기준
+        print(f"Map loaded from {filename}")

@@ -34,7 +34,7 @@ class Bomb:
 
         self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % (3 + 1)
         if self.frame > 3:
-            play_mode.explosive(self.x // 80, self.y // 80)
+            play_mode.explosive(self.x // 80, self.y // 80 + 1)
             game_world.remove_object(self)
 
     def get_bb(self):

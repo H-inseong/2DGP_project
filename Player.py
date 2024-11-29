@@ -42,19 +42,20 @@ class Player:
         self.state_machine.set_transitions(
             {
                 Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run,
-                       space_down: Jump, down_down: Crouch, up_down: ClimbMove,
+                       space_down: Jump, down_down: Crouch,  up_down: Climb, up_up: Climb,
                        z_down: Attack, x_down: Idle, c_down: Idle},
                 Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle,
-                      space_down: Jump, down_down: CrouchMove, z_down: Attack},
+                      space_down: Jump, down_down: CrouchMove, z_down: Attack, c_down:Run},
 
-                Crouch: {down_up: Idle, left_down: CrouchMove, right_down:CrouchMove, down_down: Crouch, z_down: Attack, space_down: Jump},
-                CrouchMove : {left_up: Crouch, right_up:Crouch, left_down: Crouch, right_down:Crouch, down_up: Run, space_down: Jump},
-                Climb: {up_up: ClimbMove, up_down: ClimbMove, down_up: ClimbMove, down_down: ClimbMove, z_down: Idle},
-                ClimbMove: {up_up: Climb, up_down: Climb, down_up:Climb, down_down: Climb},
+                Crouch: {down_up: Idle, left_down: CrouchMove, right_down:CrouchMove, down_down: Crouch, z_down: Attack, space_down: Jump, c_down:Crouch},
+                CrouchMove : {left_up: Crouch, right_up:Crouch, left_down: Crouch, right_down:Crouch, down_up: Run, space_down: Jump, c_down:Crouch},
+                Climb: {up_up: ClimbMove, up_down: ClimbMove, down_up: ClimbMove, down_down: ClimbMove, z_down: Idle, c_down:Climb},
+                ClimbMove: {up_up: Climb, up_down: Climb, down_up:Climb, down_down: Climb, c_down:Climb},
 
                 Stunned: { time_out: Idle },
-                Attack: { right_up: Attack, left_up: Attack, right_down: Attack, left_down: Attack, space_down: Jump, time_out: Run},
-                Jump: { right_down: Jump, left_down: Jump , landed: Run}
+                Attack: { right_up: Attack, left_up: Attack, right_down: Attack, left_down: Attack, space_down: Jump, time_out: Run, c_down:Attack},
+                Jump: { right_down: Jump, left_down: Jump , landed: Run, c_down:Jump},
+                Dead: { time_out: Dead}
             }
         )
         #f = frame
@@ -76,7 +77,7 @@ class Player:
         self.whip = Whip(self.x, self.y)
         self.left_pressed = False
         self.right_pressed = False
-
+        self.st_time = None
 
         self.hp = 40
         self.bomb_count = 4
@@ -110,7 +111,7 @@ class Player:
 
         self.state_machine.update()
 
-        self.view_x = clamp(self.x - 960, 0, 1520)
+        self.view_x = clamp(self.x - 960, 0, 1680)
         self.view_y = clamp(self.y - 480, 0, 2080)
 
     def draw(self, a,b):
@@ -149,8 +150,9 @@ class Player:
 
     def handle_collision(self, group, other):
         if group == 'Player:Map':
-
             if isinstance(other, Tile):
+                if other.tile_type == 'empty':
+                    self.land = False
                 if other.tile_type in ['solid', 'border']:
                     self.resolve_collision(other)
                 elif other.tile_type == 'spike':
@@ -158,11 +160,13 @@ class Player:
                         self.hp = 0
                         self.state_machine.start(Dead)
 
-                elif other.tile_type == 'ladder':
-                    self.ladder = True
-
-                elif other.tile_type == 'door':
+                if other.tile_type == 'door':
                     self.move_stage = True
+
+                if other.tile_type in ['rope', 'ladder', 'rope_head']:
+                    self.ladder = True
+                else:
+                    pass
 
         elif group == 'Player:Item':
             match (other.name):
@@ -183,6 +187,7 @@ class Player:
                 case ('arrow'):
                     if other.dx != 0:
                         self.hp -= 1
+
         elif group == 'Player:Monster':
             self.hp -= 1
 
@@ -224,7 +229,7 @@ class Player:
         if self.state_machine.cur_state == Stunned:
             return self.x - 30, self.y - 33, self.x + 30, self.y
 
-        return self.x - 30, self.y - 33, self.x + 30, self.y + 30
+        return self.x - 25, self.y - 33, self.x + 25, self.y + 30
 
     def use_bomb(self):
         if self.bomb_count > 0:
@@ -236,7 +241,7 @@ class Player:
     def use_rope(self):
         if self.rope_count > 0:
             self.rope_count -= 1
-            rope = Rope(self.x, self.y, self.face_dir * 10)
+            rope = Rope(self.x + 20, self.y + 20)
             game_world.add_object(rope)
             game_world.add_collision_pair('items:Map', rope, None)
 
@@ -256,6 +261,10 @@ class Idle:
             player.use_bomb()
         elif c_down(e):
             player.use_rope()
+        elif up_down(e):
+            if player.ladder:
+                player.state_machine.start(ClimbMove)
+
         player.act = 11
         player.frame = 0
         player.maxframe = 1
@@ -296,7 +305,8 @@ class Run:
             player.dirx, player.face_dir = 1, 1
         elif left_down(e) or right_up(e):  # 왼쪽으로 RUN
             player.dirx, player.face_dir = -1, -1
-
+        if c_down(e):
+            player.use_rope()
         player.act = 11
         player.frame = 0
         player.maxframe = 8
@@ -344,7 +354,8 @@ class Crouch:
             player.face_dir = -1
         elif left_down(e) or right_up(e):
             player.face_dir = 1
-
+        if c_down(e):
+            player.use_rope()
         player.act = 10
         if player.frame != 2:
             player.frame = 0
@@ -393,7 +404,8 @@ class CrouchMove:
             player.dirx, player.face_dir, player.act = 0.5, 1, 1
         elif left_down(e) or right_up(e):
             player.dirx, player.face_dir, player.act = -0.5, -1, 0
-
+        if c_down(e):
+            player.use_rope()
         player.act = 10
         player.frame = 0
         player.maxframe = 7
@@ -435,9 +447,8 @@ class CrouchMove:
 class Climb:
     @staticmethod
     def enter(player, e):
-        if player.ladder != True:
-            player.state_machine.start(Idle)
-
+        if c_down(e):
+            player.use_rope()
         player.land = True
         player.jumped = False
 
@@ -456,12 +467,20 @@ class Climb:
             player.act = 3
             player.frame = 0
             player.maxframe = 5
+
+        player.x = player.x // 80 * 80
     @staticmethod
     def exit(player, e):
         player.view_up = False
 
     @staticmethod
     def do(player):
+
+        if not player.ladder:
+            player.state_machine.start(Idle)  # 사다리를 벗어나면 Idle 상태로 전환
+        else:
+            if player.state_machine.cur_state in [Climb, ClimbMove]:
+                player.velocity_y = 0  # 중력 무시
         if player.frame < 4:
             player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
 
@@ -478,27 +497,30 @@ class Climb:
 class ClimbMove:
     @staticmethod
     def enter(player, e):
-        if player.ladder != True:
-            player.state_machine.start(Idle)
         player.land = True
         player.jumped = False
         if up_down(e) or down_up(e):
             player.diry = 1
         elif down_down(e) or up_up(e):
             player.diry = -1
-
+        if c_down(e):
+            player.use_rope()
         player.act = 4
         player.frame = 0
         player.maxframe = 10
-
+        player.x = player.x // 80 * 80
     @staticmethod
     def exit(player, e):
         player.diry = 0
 
     @staticmethod
     def do(player):
-        if player.ladder != True:
+        if not player.ladder:
             player.state_machine.start(Idle)
+        else:
+            if player.state_machine.cur_state in [Climb, ClimbMove]:
+                player.velocity_y = 0
+
         player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
         player.y += player.diry * RUN_SPEED_PPS * game_framework.frame_time
 
@@ -604,7 +626,8 @@ class Dead:
         player.act = 9
         player.frame = 0
         player.maxframe = 12
-        player.st_time = get_time()
+        if player.st_time == None:
+            player.st_time = get_time()
 
     @staticmethod
     def exit(player, e):
@@ -613,10 +636,8 @@ class Dead:
     @staticmethod
     def do(player):
         player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
-
         if get_time() - player.st_time > 5:
-            game_framework.quit()  # 게임 종료 또는 다른 동작 수행
-
+            game_framework.quit()
     @staticmethod
     def draw(player):
         if player.face_dir == 1:
@@ -680,7 +701,8 @@ class Jump:
                 player.velocity_y = 400  # 점프 초기 속도 (픽셀/초)
                 player.jumped = True
                 player.land = False
-
+            if c_down(e):
+                player.use_rope()
             player.act = 2
             player.maxframe = 7
             player.frame = 0
@@ -722,7 +744,8 @@ class Attack:
             player.dirx, player.face_dir = 1, 1
         elif left_down(e):  # 왼쪽으로 RUN
             player.dirx, player.face_dir = -1, -1
-
+        if c_down(e):
+            player.use_rope()
         player.act = 7
 
         if not player.whip.active:
