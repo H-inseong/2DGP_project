@@ -22,19 +22,19 @@ class Whip:
     def draw(self, x, y):
         if self.direction == 1:
             if int(self.frame) < 2:
-                Whip.image.clip_draw(int(self.frame) * 128, 0, 128, 128,
-                                        self.x - (6 - int(self.frame)) * 15 - x, self.y + 30 - y, 60, 60)
+                Whip.image.clip_draw_to_origin(int(self.frame) * 128, 0, 128, 128,
+                                        self.x - (6 - int(self.frame)) * 15 - x , self.y + 30 - y, 60, 60)
             else:
-                Whip.image.clip_draw(int(self.frame) * 128, 0, 128, 128,
+                Whip.image.clip_draw_to_origin(int(self.frame) * 128, 0, 128, 128,
                                         self.x + 20 - (6 - int(self.frame)) * 15 - x, self.y - y, 60, 60)
         else:
 
             if int(self.frame) < 2:
                 Whip.image.clip_composite_draw(int(self.frame) * 128, 0, 128, 128, 0, 'h',
-                                        self.x + (6 - int(self.frame)) * 15 - x,self.y + 30 - y, 60, 60)
+                                        self.x + (6 - int(self.frame)) * 15 - x + 40,self.y + 30 - y + 40, 60, 60)
             else:
                 Whip.image.clip_composite_draw(int(self.frame) * 128, 0, 128, 128, 0, 'h',
-                                        self.x - 20 + (6 - int(self.frame)) * 15 - x, self.y - y, 60, 60)
+                                        self.x - 20 + (6 - int(self.frame)) * 15 - x + 40, self.y - y + 40, 60, 60)
         if int(self.frame) == 5:
             aa = True
         draw_rectangle(*self.get_bb())

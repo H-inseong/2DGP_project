@@ -19,10 +19,10 @@ class Rope:
         self. velocity = 1000
         self.frame = 0
         self.land = False
-        self.max_height = self.y // 80 + 8
+        self.max_height = self.y // 80 + 7
 
     def draw(self,vx, vy):
-        self.image.clip_draw(128 * 10, 0, 128, 128, self.x - vx, self.y - vy ,80, 80)
+        self.image.clip_draw_to_origin(128 * 10, 0, 128, 128, self.x - vx, self.y - vy ,80, 80)
         draw_rectangle(*self.get_bb())
 
     # rope.py

@@ -3,6 +3,7 @@ from pico2d import *
 import UI
 import game_framework
 import game_world
+import play_mode
 from Map import Tile
 from rope import Rope
 from state_machine import *
@@ -93,11 +94,19 @@ class Player:
         self.velocity_y = 0  # 초기 수직 속도
 
     def update(self):
+        current_tile_type = play_mode.map_obj.get_tile_type(self.x + 40, self.y + 40)
+        if current_tile_type in ['ladder', 'rope', 'rope_head']:
+            self.ladder = True
+        else:
+            self.ladder = False
+
         if self.hp < 1:
             self.state_machine.start(Dead)
+
         if self.left_pressed and not self.right_pressed:
             self.dirx = -1
             self.face_dir = -1
+
         elif self.right_pressed and not self.left_pressed:
             self.dirx = 1
             self.face_dir = 1
@@ -110,7 +119,7 @@ class Player:
             self.y += self.velocity_y * game_framework.frame_time
 
         self.state_machine.update()
-
+        self.land = False
         self.view_x = clamp(self.x - 960, 0, 1680)
         self.view_y = clamp(self.y - 480, 0, 2080)
 
@@ -119,7 +128,9 @@ class Player:
         self.ui.draw(self.hp, self.bomb_count, self.rope_count, self.gold)
         if DEBUG:
             bb = self.get_bb()
-            draw_rectangle(bb[0] - self.view_x, bb[1] - self.view_y, bb[2] - self.view_x, bb[3] - self.view_y)
+            draw_rectangle(bb[0] - self.view_x + 40, bb[1] - self.view_y + 40, bb[2] - self.view_x + 40, bb[3] - self.view_y + 40)
+            draw_rectangle(self.x + 40 - 2, self.y+ 40 - 2, self.x + 40 + 2, self.y+ 40 + 2)
+            draw_rectangle(0, 0, 100, 100)
 
     def handle_event(self, event):
         if event.type == SDL_KEYDOWN:
@@ -156,7 +167,7 @@ class Player:
                 if other.tile_type in ['solid', 'border']:
                     self.resolve_collision(other)
                 elif other.tile_type == 'spike':
-                    if self.velocity_y < 0:
+                    if self.velocity_y < -200:
                         self.hp = 0
                         self.state_machine.start(Dead)
 
@@ -280,7 +291,7 @@ class Idle:
     @staticmethod
     def draw(player):
         if player.face_dir == 1:
-            player.image.clip_draw(int(player.frame),
+            player.image.clip_draw_to_origin(int(player.frame),
                                    player.f_h * player.act + 64,
                                    player.f_w,
                                    player.f_h,
@@ -292,8 +303,8 @@ class Idle:
                                              player.f_w,
                                              player.f_h,
                                              0, 'h',
-                                             player.x - player.view_x,
-                                             player.y - player.view_y,
+                                             player.x - player.view_x + 40,
+                                             player.y - player.view_y + 40,
                                              80,
                                              80)
 
@@ -327,7 +338,7 @@ class Run:
     @staticmethod
     def draw(player):
         if player.face_dir == 1:
-            player.image.clip_draw(int(player.frame) * player.f_w + player.f_w,
+            player.image.clip_draw_to_origin(int(player.frame) * player.f_w + player.f_w,
                                    player.f_h * player.act + 64,
                                    player.f_w,
                                    player.f_h,
@@ -339,8 +350,8 @@ class Run:
                                              player.f_w,
                                              player.f_h,
                                              0, 'h',
-                                             player.x - player.view_x,
-                                             player.y - player.view_y,
+                                             player.x - player.view_x + 40,
+                                             player.y - player.view_y + 40,
                                              80,
                                              80)
 
@@ -379,7 +390,7 @@ class Crouch:
     @staticmethod
     def draw(player):
         if player.face_dir == 1:
-            player.image.clip_draw(int(player.frame) * player.f_w,
+            player.image.clip_draw_to_origin(int(player.frame) * player.f_w,
                                    player.f_h * player.act + 64,
                                    player.f_w,
                                    player.f_h,
@@ -391,8 +402,8 @@ class Crouch:
                                              player.f_w,
                                              player.f_h,
                                              0, 'h',
-                                             player.x - player.view_x,
-                                             player.y - player.view_y,
+                                             player.x - player.view_x + 40,
+                                             player.y - player.view_y + 40,
                                              80,
                                              80)
 
@@ -426,7 +437,7 @@ class CrouchMove:
     @staticmethod
     def draw(player):
         if player.face_dir == 1:
-            player.image.clip_draw(int(player.frame) * player.f_w + player.f_w * 5,
+            player.image.clip_draw_to_origin(int(player.frame) * player.f_w + player.f_w * 5,
                                    player.f_h * player.act + 64,
                                    player.f_w,
                                    player.f_h,
@@ -438,8 +449,8 @@ class CrouchMove:
                                              player.f_w,
                                              player.f_h,
                                              0, 'h',
-                                             player.x - player.view_x,
-                                             player.y - player.view_y,
+                                             player.x - player.view_x + 40,
+                                             player.y - player.view_y + 40,
                                              80,
                                              80)
 
@@ -486,7 +497,7 @@ class Climb:
 
     @staticmethod
     def draw(player):
-        player.image.clip_draw(int(player.frame) * player.f_w,
+        player.image.clip_draw_to_origin(int(player.frame) * player.f_w,
                                player.f_h * player.act + 64,
                                player.f_w,
                                player.f_h,
@@ -529,7 +540,7 @@ class ClimbMove:
 
     @staticmethod
     def draw(player):
-        player.image.clip_draw(int(player.frame) * player.f_w,
+        player.image.clip_draw_to_origin(int(player.frame) * player.f_w,
                                player.f_h * player.act + 64,
                                player.f_w,
                                player.f_h,
@@ -561,21 +572,21 @@ class Stunned:
     def draw(player):
         if player.face_dir == 1:
             if player.dx > 0:
-                player.image.clip_draw(0,
+                player.image.clip_draw_to_origin(0,
                                        player.f_h * player.act + 64,
                                        player.f_w,
                                        player.f_h,
                                        player.x - player.view_x,
                                        player.y - player.view_y, )
             elif player.dx < 0:
-                player.image.clip_draw(0 + player.f_w,
+                player.image.clip_draw_to_origin(0 + player.f_w,
                                        player.f_w * player.act + 64,
                                        player.f_w,
                                        player.f_w,
                                        player.x - player.view_x,
                                        player.y - player.view_y, )
             elif player.dx == 0:
-                player.image.clip_draw(player.f_w * 3,
+                player.image.clip_draw_to_origin(player.f_w * 3,
                                        player.f_h * player.act + 64,
                                        player.f_w,
                                        player.f_h,
@@ -588,8 +599,8 @@ class Stunned:
                                                  player.f_w,
                                                  player.f_h,
                                                  0, 'h',
-                                                 player.x - player.view_x,
-                                                 player.y - player.view_y,
+                                                 player.x - player.view_x + 40,
+                                                 player.y - player.view_y + 40,
                                                  80,
                                                  80)
             elif player.dx < 0:
@@ -598,8 +609,8 @@ class Stunned:
                                                  player.f_w,
                                                  player.f_h,
                                                  0, 'h',
-                                                 player.x - player.view_x,
-                                                 player.y - player.view_y,
+                                                 player.x - player.view_x + 40,
+                                                 player.y - player.view_y + 40,
                                                  80,
                                                  80)
             elif player.dx == 0:
@@ -608,12 +619,12 @@ class Stunned:
                                                  player.f_w,
                                                  player.f_h,
                                                  0, 'h',
-                                                 player.x - player.view_x,
-                                                 player.y - player.view_y,
+                                                 player.x - player.view_x + 40,
+                                                 player.y - player.view_y + 40,
                                                  80,
                                                  80)
 
-        player.sec_image.clip_draw(int(player.frame) * player.f_w,
+        player.sec_image.clip_draw_to_origin(int(player.frame) * player.f_w,
                                    128 * 2,
                                    128,
                                    128,
@@ -645,21 +656,21 @@ class Dead:
     def draw(player):
         if player.face_dir == 1:
             if player.dx > 0:
-                player.image.clip_draw(0,
+                player.image.clip_draw_to_origin(0,
                                        player.f_h * player.act + 64,
                                        player.f_w,
                                        player.f_h,
                                        player.x - player.view_x,
                                        player.y - player.view_y, )
             elif player.dx < 0:
-                player.image.clip_draw(0 + player.f_w,
+                player.image.clip_draw_to_origin(0 + player.f_w,
                                        player.f_w * player.act + 64,
                                        player.f_w,
                                        player.f_w,
                                        player.x - player.view_x,
                                        player.y - player.view_y, )
             elif player.dx == 0:
-                player.image.clip_draw(player.f_w * 3,
+                player.image.clip_draw_to_origin(player.f_w * 3,
                                        player.f_h * player.act + 64,
                                        player.f_w,
                                        player.f_h,
@@ -672,8 +683,8 @@ class Dead:
                                                  player.f_w,
                                                  player.f_h,
                                                  0, 'h',
-                                                 player.x - player.view_x,
-                                                 player.y - player.view_y,
+                                                 player.x - player.view_x + 40,
+                                                 player.y - player.view_y + 40,
                                                  80,
                                                  80)
             elif player.dx < 0:
@@ -682,8 +693,8 @@ class Dead:
                                                  player.f_w,
                                                  player.f_h,
                                                  0, 'h',
-                                                 player.x - player.view_x,
-                                                 player.y - player.view_y,
+                                                 player.x - player.view_x + 40,
+                                                 player.y - player.view_y + 40,
                                                  80,
                                                  80)
             elif player.dx == 0:
@@ -692,8 +703,8 @@ class Dead:
                                                  player.f_w,
                                                  player.f_h,
                                                  0, 'h',
-                                                 player.x - player.view_x,
-                                                 player.y - player.view_y,
+                                                 player.x - player.view_x + 40,
+                                                 player.y - player.view_y + 40,
                                                  80,
                                                  80)
 
@@ -723,7 +734,7 @@ class Jump:
         @staticmethod
         def draw(player):
             if player.face_dir == 1:
-                player.image.clip_draw(int(player.frame) * player.f_w,
+                player.image.clip_draw_to_origin(int(player.frame) * player.f_w,
                                        player.f_h * player.act + 64,
                                        player.f_w,
                                        player.f_h,
@@ -735,8 +746,8 @@ class Jump:
                                                  player.f_w,
                                                  player.f_w,
                                                  0, 'h',
-                                                 player.x - player.view_x,
-                                                 player.y - player.view_y,
+                                                 player.x - player.view_x + 40,
+                                                 player.y - player.view_y + 40,
                                                  80,
                                                  80)
 
@@ -779,7 +790,7 @@ class Attack:
     @staticmethod
     def draw(player):
         if player.face_dir == 1:
-            player.image.clip_draw(int(player.frame) * player.f_w,
+            player.image.clip_draw_to_origin(int(player.frame) * player.f_w,
                                    player.f_h * player.act + 64,
                                    player.f_w,
                                    player.f_h,
@@ -791,8 +802,8 @@ class Attack:
                                              player.f_w,
                                              player.f_h,
                                              0, 'h',
-                                             player.x - player.view_x,
-                                             player.y - player.view_y,
+                                             player.x - player.view_x + 40,
+                                             player.y - player.view_y + 40,
                                              80,
                                              80)
         player.whip.draw(player.view_x, player.view_y)

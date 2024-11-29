@@ -27,23 +27,23 @@ class Tile:
         screen_y = (self.y * 80) - camera_y
 
         if self.tile_type == 'empty':
-            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw_to_origin(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
         elif self.tile_type == 'border':
-            Tile.sprite_sheet.clip_draw(self.f * 7, self.f * 11, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw_to_origin(self.f * 7, self.f * 11, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
         elif self.tile_type == 'solid':
-            Tile.sprite_sheet.clip_draw(self.f * 0, self.f * 11, self.f, self.f, screen_x, screen_y, 80, 80)
+            Tile.sprite_sheet.clip_draw_to_origin(self.f * 0, self.f * 11, self.f, self.f, screen_x, screen_y, 80, 80)
         elif self.tile_type == 'ladder':
-            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
-            Tile.sprite_sheet.clip_draw(self.f * 4, self.f * 10, self.f, self.f, screen_x, screen_y, 80, 80)
+            Tile.sprite_sheet.clip_draw_to_origin(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw_to_origin(self.f * 4, self.f * 10, self.f, self.f, screen_x, screen_y, 80, 80)
         elif self.tile_type == 'spike':
-            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
-            Tile.sprite_sheet.clip_draw(self.f * 5, self.f * 2, self.f, self.f, screen_x, screen_y, 80, 80)
+            Tile.sprite_sheet.clip_draw_to_origin(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw_to_origin(self.f * 5, self.f * 2, self.f, self.f, screen_x, screen_y, 80, 80)
         elif self.tile_type == 'rope_head':
-            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
-            Tile.rope_sheet.clip_draw(self.f * 11, 0, self.f, self.f, screen_x + 1, screen_y + 3, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw_to_origin(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.rope_sheet.clip_draw_to_origin(self.f * 11, 0, self.f, self.f, screen_x + 1, screen_y + 3, self.rt, self.rt)
         elif self.tile_type == 'rope':
-            Tile.sprite_sheet.clip_draw(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
-            Tile.rope_sheet.clip_draw(self.f * 5, 0, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.sprite_sheet.clip_draw_to_origin(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
+            Tile.rope_sheet.clip_draw_to_origin(self.f * 5, 0, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
 
 
     def get_bb(self):
@@ -126,3 +126,9 @@ class Map:
                 for x, tile_type in enumerate(tile_types):
                     self.add_tile(tile_type, x, self.height - y - 1)  # 상단이 0,0 기준
         print(f"Map loaded from {filename}")
+
+    def get_tile_type(self, x, y):
+        tile_x, tile_y = int(x // 80), int(y // 80)  # 타일 크기(80x80) 기준 좌표 변환
+        if (tile_x, tile_y) in self.tiles:
+            return self.tiles[(tile_x, tile_y)].tile_type
+        return None  # 타일이 없을 경우

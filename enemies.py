@@ -13,7 +13,7 @@ RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
 
 # zombie Action Speed
-TIME_PER_ACTION = 0.5
+TIME_PER_ACTION = 1
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 10.0
 
@@ -48,9 +48,9 @@ class Snake:
 
     def draw(self, x, y):
         if self.dir < 0:
-            Snake.image.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.color + self.f_size + 28, self.f_size, self.f_size, 0, 'h', self.x - x, self.y - y, 80, 80)
+            Snake.image.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.color + self.f_size + 28, self.f_size, self.f_size, 0, 'h', self.x - x + 40, self.y - y + 40, 80, 80)
         else:
-            Snake.image.clip_draw(int(self.frame) * self.f_size,
+            Snake.image.clip_draw_to_origin(int(self.frame) * self.f_size,
                                   self.f_size * self.color + self.f_size + 28,
                                   self.f_size, self.f_size,
                                   self.x - x, self.y - y )
@@ -68,23 +68,24 @@ class Snake:
         return self.x - self.f_size/3 , self.y - self.f_size/2 , self.x + self.f_size/3 , self.y + self.f_size/3
 
 class Boss:
-    images = None
+    image = None
 
     def load_images(self):
-        if Boss.image == None:
+        if Boss.image is None:
             Boss.image = load_image('boss.png')
 
-    def __init__(self, color):
-        self.x, self.y = random.randint(1600 - 800, 1600), 150
+    def __init__(self):
+        self.x, self.y = random.randint(2000 - 800, 1600), 240
         self.load_images()
         self.f_size = 128
         self.frame = 0
-        self.color = color  # 0 : blue  1 : green
+        self.action = 15
+        self.maxframe = 9
         self.dir = random.choice([-1, 1])
         self.attack = False
 
     def update(self):
-        self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % FRAMES_PER_ACTION
+        self.frame = (self.frame + self.maxframe * ACTION_PER_TIME * game_framework.frame_time) % self.maxframe
         self.x += RUN_SPEED_PPS * self.dir * game_framework.frame_time
 
         # Map 충돌체크 추가
@@ -95,15 +96,16 @@ class Boss:
         self.x = clamp(800, self.x, 1600)
         pass
 
-    def draw(self):
-        if self.dir < 0:
-            Snake.images.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.color + self.size, 'h',
-                                             self.x, self.y, 80, 80)
+    def draw(self, x, y):
+        if self.dir > 0:
+            self.image.clip_draw_to_origin(int(self.frame) * self.f_size, self.f_size * self.action,
+                                           128, 128,
+                                            self.x - x, self.y - y, 160, 160)
         else:
-            Snake.images.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.color + self.size, 'h',
-                                             self.x, self.y, 80, 80)
+            self.image.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.action,
+                                           128, 128, 0, 'h',
+                                            self.x - x + 80, self.y - y + 80, 160, 160)
 
-        draw_rectangle(*self.get_bb())
 
     def handle_event(self, event):
         pass

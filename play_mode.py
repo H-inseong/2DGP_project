@@ -3,7 +3,8 @@ import game_framework
 import game_world
 from Map import Map
 from Player import Player
-from enemies import Snake
+from enemies import Snake, Boss
+
 
 def init():
     global player, map_obj, camera_x, camera_y
@@ -28,9 +29,13 @@ def init():
     camera_x, camera_y = 0, 0
 
     s = Snake(0)
+    b = Boss()
     game_world.add_object(s, 1)
     game_world.add_collision_pair('Player:Monster', player, s)
     game_world.add_collision_pair('Whip:Monster', None, s)
+    game_world.add_object(b,  1)
+    game_world.add_collision_pair('Player:Monster', player, b)
+    game_world.add_collision_pair('Whip:Monster', None, b)
 
     game_world.add_collision_pair('Player:Map', player, None)  # 그룹 A에 플레이어 추가
     for tile in map_obj.tiles.values():  # Tile 객체를 순회
@@ -49,6 +54,7 @@ def handle_events():
         if event.type == pico2d.SDL_QUIT:
             game_framework.quit()
         elif event.type == pico2d.SDL_KEYDOWN:
+
             if event.key == pico2d.SDLK_ESCAPE:
                 game_framework.quit()
 
@@ -64,7 +70,7 @@ def handle_events():
             else:
                 player.handle_event(event)
         elif event.type == pico2d.SDL_MOUSEBUTTONDOWN:
-             mouse_x, mouse_y = event.x + 40, 960 - event.y + 40  # 화면 좌표를 맵 좌표로 변환
+             mouse_x, mouse_y = event.x, 960 - event.y  # 화면 좌표를 맵 좌표로 변환
 
              world_x = camera_x + mouse_x
              world_y = camera_y + mouse_y
