@@ -55,7 +55,7 @@ class Player:
 
                 Stunned: { time_out: Idle },
                 Attack: { right_up: Attack, left_up: Attack, right_down: Attack, left_down: Attack, space_down: Jump, time_out: Run, c_down:Attack},
-                Jump: { right_down: Jump, left_down: Jump , landed: Run, c_down:Jump},
+                Jump: { right_down: Jump, left_down: Jump , landed: Run, c_down:Jump, up_down: ClimbMove},
                 Dead: { time_out: Dead}
             }
         )
