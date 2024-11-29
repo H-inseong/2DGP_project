@@ -42,15 +42,15 @@ class Player:
         self.state_machine.set_transitions(
             {
                 Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run,
-                       space_down: Jump, down_down: Crouch,  up_down: Climb, up_up: Climb,
+                       space_down: Jump, down_down: Crouch,  up_down: ClimbMove, up_up: ClimbMove,
                        z_down: Attack, x_down: Idle, c_down: Idle},
                 Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle,
                       space_down: Jump, down_down: CrouchMove, z_down: Attack, c_down:Run},
 
                 Crouch: {down_up: Idle, left_down: CrouchMove, right_down:CrouchMove, down_down: Crouch, z_down: Attack, space_down: Jump, c_down:Crouch},
                 CrouchMove : {left_up: Crouch, right_up:Crouch, left_down: Crouch, right_down:Crouch, down_up: Run, space_down: Jump, c_down:Crouch},
-                Climb: {up_up: ClimbMove, up_down: ClimbMove, down_up: ClimbMove, down_down: ClimbMove, z_down: Idle, c_down:Climb},
-                ClimbMove: {up_up: Climb, up_down: Climb, down_up:Climb, down_down: Climb, c_down:Climb},
+                Climb: {up_up: ClimbMove, up_down: ClimbMove, down_up: ClimbMove, down_down: ClimbMove, z_down: Idle, c_down:Climb, space_down: Jump},
+                ClimbMove: {up_up: Climb, up_down: ClimbMove, down_up:Climb, down_down: ClimbMove, c_down:Climb, space_down: Jump},
 
                 Stunned: { time_out: Idle },
                 Attack: { right_up: Attack, left_up: Attack, right_down: Attack, left_down: Attack, space_down: Jump, time_out: Run, c_down:Attack},
@@ -497,11 +497,13 @@ class Climb:
 class ClimbMove:
     @staticmethod
     def enter(player, e):
+        if not player.ladder:
+            player.state_machine.start(Idle)
         player.land = True
         player.jumped = False
-        if up_down(e) or down_up(e):
+        if up_down(e):
             player.diry = 1
-        elif down_down(e) or up_up(e):
+        elif down_down(e):
             player.diry = -1
         if c_down(e):
             player.use_rope()
@@ -523,6 +525,7 @@ class ClimbMove:
 
         player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
         player.y += player.diry * RUN_SPEED_PPS * game_framework.frame_time
+
 
     @staticmethod
     def draw(player):

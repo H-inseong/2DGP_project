@@ -60,6 +60,7 @@ def handle_events():
             elif event.key == pico2d.SDLK_UP:
                 if player.move_stage:  # door 위에서 위쪽 화살표 입력
                     load_next_stage()
+                player.handle_event(event)
             else:
                 player.handle_event(event)
         elif event.type == pico2d.SDL_MOUSEBUTTONDOWN:
