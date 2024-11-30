@@ -9,7 +9,8 @@ from enemies import Snake, Boss
 def init():
     global player, map_obj, camera_x, camera_y
     player = Player(80 * 5, 80 * 4)
-    game_world.add_object(player, 1)
+    game_world.add_object(player, 2)
+
 
     map_obj = Map(46, 38)  # 맵 생성 (가로 46 타일, 세로 38 타일 예시)
     map_obj.add_tile('ladder', 10, 10)
@@ -42,6 +43,8 @@ def init():
         if tile.tile_type != 'empty':
             game_world.add_collision_pair('Player:Map', None, tile)
             game_world.add_collision_pair('items:Map', None, tile)
+
+
 
 
 def finish():

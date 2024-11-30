@@ -79,8 +79,10 @@ class Player:
         self.left_pressed = False
         self.right_pressed = False
         self.st_time = None
+        self.invincible = False  # 무적 상태 여부
+        self.invincible_timer = 0  # 무적 상태 지속 시간
 
-        self.hp = 40
+        self.hp = 4
         self.bomb_count = 4
         self.rope_count = 4
         self.gold = 0
@@ -94,9 +96,15 @@ class Player:
         self.velocity_y = 0  # 초기 수직 속도
 
     def update(self):
+        if self.invincible:
+            self.invincible_timer -= game_framework.frame_time
+            if self.invincible_timer <= 0:
+                self.invincible = False
+
         current_tile_type = play_mode.map_obj.get_tile_type(self.x + 40, self.y + 40)
         if current_tile_type in ['ladder', 'rope', 'rope_head']:
             self.ladder = True
+            self.jumped = False
         else:
             self.ladder = False
 
@@ -118,7 +126,9 @@ class Player:
                 self.velocity_y += GRAVITY * game_framework.frame_time
             self.y += self.velocity_y * game_framework.frame_time
 
+
         self.state_machine.update()
+
         self.land = False
         self.view_x = clamp(self.x - 960, 0, 1680)
         self.view_y = clamp(self.y - 480, 0, 2080)
@@ -199,9 +209,8 @@ class Player:
                     if other.dx != 0:
                         self.hp -= 1
 
-        elif group == 'Player:Monster':
-            self.hp -= 1
-
+        elif group == 'Player:Monster' and not self.invincible:
+            self.take_damage(other)
 
     def resolve_collision(self, tile):
         player_bb = self.get_bb()
@@ -256,8 +265,25 @@ class Player:
             game_world.add_object(rope)
             game_world.add_collision_pair('items:Map', rope, None)
 
+    def take_damage(self, monster):
+        self.hp -= 1
+        self.invincible = True
+        self.invincible_timer = 1.5
+
+        if self.x < monster.x:
+            self.x -= 30
+            self.velocity_y = 200
+        else:
+            self.x += 30
+            self.velocity_y = 200
+
 def clamp(value, min_value, max_value):
     return max(min_value, min(value, max_value))
+
+
+
+
+
 
 class Idle:
     @staticmethod
@@ -460,8 +486,6 @@ class Climb:
     def enter(player, e):
         if c_down(e):
             player.use_rope()
-        player.land = True
-        player.jumped = False
 
         if start_event(e):
             player.face_dir = 1
@@ -479,7 +503,7 @@ class Climb:
             player.frame = 0
             player.maxframe = 5
 
-        player.x = player.x // 80 * 80
+        player.x = (player.x + 40) // 80 * 80
     @staticmethod
     def exit(player, e):
         player.view_up = False
@@ -510,8 +534,7 @@ class ClimbMove:
     def enter(player, e):
         if not player.ladder:
             player.state_machine.start(Idle)
-        player.land = True
-        player.jumped = False
+
         if up_down(e):
             player.diry = 1
         elif down_down(e):
@@ -521,7 +544,7 @@ class ClimbMove:
         player.act = 4
         player.frame = 0
         player.maxframe = 10
-        player.x = player.x // 80 * 80
+        player.x = (player.x + 40) // 80 * 80
     @staticmethod
     def exit(player, e):
         player.diry = 0

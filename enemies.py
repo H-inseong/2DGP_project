@@ -83,7 +83,7 @@ class Boss:
         self.direction = -1  # -1: 왼쪽, 1: 오른쪽
         self.hp = 100
         self.speed = RUN_SPEED_PPS / 2
-        self.roll_speed = RUN_SPEED_PPS * 2
+        self.roll_speed = RUN_SPEED_PPS * 3
         self.roll_timer = 0
         self.recover_timer = 0
         self.build_behavior_tree()
@@ -137,6 +137,8 @@ class Boss:
 
     def chase_player(self):
         self.roll_timer += game_framework.frame_time
+        self.maxframe = 9
+        self.action = 8
         self.x += self.roll_speed * self.direction * game_framework.frame_time
         if abs(play_mode.player.x - self.x) < 50:  # 플레이어 근처에 도달
             self.recover_timer = 2  # 2초 동안 회복 상태
@@ -153,7 +155,7 @@ class Boss:
 
     def handle_collision(self, group, other):
         if group == 'Whip:Monster':  # 채찍 공격에 맞을 때
-            self.hp -= 10
+            self.hp -= 1
             if self.hp <= 0:
                 game_world.remove_object(self)
 

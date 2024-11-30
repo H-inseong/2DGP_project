@@ -31,6 +31,7 @@ class Tile:
         elif self.tile_type == 'border':
             Tile.sprite_sheet.clip_draw_to_origin(self.f * 7, self.f * 11, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
         elif self.tile_type == 'solid':
+            Tile.sprite_sheet.clip_draw_to_origin(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, 90,90)
             Tile.sprite_sheet.clip_draw_to_origin(self.f * 0, self.f * 11, self.f, self.f, screen_x, screen_y, 80, 80)
         elif self.tile_type == 'ladder':
             Tile.sprite_sheet.clip_draw_to_origin(self.f * 8, self.f * 6, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
@@ -74,6 +75,9 @@ class Map:
                     if x < 3 or y < 3 or x >= width - 3 or y >= height - 3:
                         tile_type = 'border'
                     self.tiles[(x, y)] = Tile(tile_type, x, y)
+                    if self.tiles[(x,y)].tile_type == 'border':
+                        game_world.add_object(self.tiles[(x, y)], 1)
+                        continue
                     game_world.add_object(self.tiles[(x, y)], 0)  # 타일을 깊이 0에 추가
 
     def draw(self, camera_x=0, camera_y=0):
