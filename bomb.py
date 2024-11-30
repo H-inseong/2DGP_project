@@ -22,8 +22,7 @@ class Bomb:
         self.land = False
 
     def draw(self,vx, vy):
-        self.image.clip_draw_to_origin(128 * int(self.frame), 128 * 10, 128, 128, self.x - vx, self.y - vy ,80, 80)
-        self.image.clip_draw_to_origin(128 * int(self.frame), 128 * 10, 128, 128, self.x, self.y, 50, 50)
+        self.image.clip_draw(128 * int(self.frame), 128 * 10, 128, 128, self.x - vx, self.y - vy ,80, 80)
 
     def update(self):
         self.x += self.velocity * game_framework.frame_time
@@ -34,7 +33,7 @@ class Bomb:
 
         self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % (3 + 1)
         if self.frame > 3:
-            play_mode.explosive(self.x // 80, self.y // 80 + 1)
+            play_mode.explosive(self.x // 80, self.y // 80)
             game_world.remove_object(self)
 
     def get_bb(self):

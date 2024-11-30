@@ -8,7 +8,7 @@ from enemies import Snake, Boss
 
 def init():
     global player, map_obj, camera_x, camera_y
-    player = Player(80 * 5, 80 * 4)
+    player = Player(80 * 38, 80 * 33)
     game_world.add_object(player, 2)
 
 
@@ -29,21 +29,21 @@ def init():
     map_obj.add_tile('solid', 5, 3)
     camera_x, camera_y = 0, 0
 
-    s = Snake(0)
+    """s = Snake(0)
     b = Boss()
     game_world.add_object(s, 1)
     game_world.add_collision_pair('Player:Monster', player, s)
     game_world.add_collision_pair('Whip:Monster', None, s)
     game_world.add_object(b,  1)
     game_world.add_collision_pair('Player:Monster', player, b)
-    game_world.add_collision_pair('Whip:Monster', None, b)
+    game_world.add_collision_pair('Whip:Monster', None, b)"""
 
     game_world.add_collision_pair('Player:Map', player, None)
     for tile in map_obj.tiles.values():
         if tile.tile_type != 'empty':
             game_world.add_collision_pair('Player:Map', None, tile)
             game_world.add_collision_pair('items:Map', None, tile)
-
+    map_obj.load_map("current_map.csv")
 
 
 

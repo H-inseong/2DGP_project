@@ -1,5 +1,3 @@
-from tkinter.constants import SEL_FIRST
-
 from pico2d import *
 import game_world
 import game_framework
@@ -59,11 +57,10 @@ class Rope:
 
         if min_overlap == overlap_left:
             self.x -= overlap_left
-            self.velocity = -self.velocity
+
 
         elif min_overlap == overlap_right:
             self.x += overlap_right
-            self.velocity = -self.velocity
 
         elif min_overlap == overlap_bottom:
             self.y -= overlap_bottom

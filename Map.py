@@ -1,6 +1,9 @@
+from sys import platlibdir
+
 from pico2d import *
 
 import game_world
+import play_mode
 
 screen_width = 1920
 screen_height = 960
@@ -37,10 +40,11 @@ class Tile:
         elif self.tile_type == 'spike':
             Tile.sprite_sheet.clip_draw_to_origin(self.f * 5, self.f * 2, self.f, self.f, screen_x, screen_y, 80, 80)
         elif self.tile_type == 'rope_head':
-            Tile.rope_sheet.clip_draw_to_origin(self.f * 11, 0, self.f, self.f, screen_x + 1, screen_y + 3, self.rt, self.rt)
+            Tile.rope_sheet.clip_draw_to_origin(self.f * 11, 0, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
         elif self.tile_type == 'rope':
-            Tile.rope_sheet.clip_draw_to_origin(self.f * 5, 0, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
-
+            Tile.rope_sheet.clip_draw_to_origin(self.f * 5, 0, self.f, self.f, screen_x - 1, screen_y, self.rt, self.rt)
+        elif self.tile_type == 'start':
+            Tile.sprite_sheet.clip_draw_to_origin(43, 380, 300, 240, screen_x, screen_y, 160, 160)
         left, bottom, right, top = self.get_bb()
         draw_rectangle(left - camera_x, bottom - camera_y, right - camera_x, top - camera_y)
 
@@ -117,22 +121,22 @@ class Map:
         pass
 
     def save_map(self, filename):
+        """Save the map to a file, ensuring the top row is saved first."""
         with open(filename, 'w') as file:
-            for y in range(self.height):
-                row = []
-                for x in range(self.width):
-                    tile = self.tiles[(x, y)]
-                    row.append(tile.tile_type)
+            for y in reversed(range(self.height)):  # Reverse the Y-axis
+                row = [self.tiles[(x, y)].tile_type for x in range(self.width)]
                 file.write(','.join(row) + '\n')
         print(f"Map saved to {filename}")
 
     def load_map(self, filename):
         with open(filename, 'r') as file:
             lines = file.readlines()
-            for y, line in enumerate(lines):
+            for y, line in enumerate(reversed(lines)):  # 파일의 첫 줄이 맵의 상단
                 tile_types = line.strip().split(',')
                 for x, tile_type in enumerate(tile_types):
-                    self.add_tile(tile_type, x, self.height - y - 1)  # 상단이 0,0 기준
+                    self.add_tile(tile_type, x, y)  # x, y 좌표에 타일 추가
+                    if tile_type == 'start':
+                        play_mode.player.__init__(x*80 + 70, y*80)
         print(f"Map loaded from {filename}")
 
     def get_tile_type(self, x, y):

@@ -1,3 +1,5 @@
+from sys import platlibdir
+
 from pico2d import *
 
 import UI
@@ -101,7 +103,7 @@ class Player:
             if self.invincible_timer <= 0:
                 self.invincible = False
 
-        current_tile_type = play_mode.map_obj.get_tile_type(self.x + 40, self.y + 40)
+        current_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y)
         if current_tile_type in ['ladder', 'rope', 'rope_head']:
             self.ladder = True
             self.jumped = False
@@ -131,7 +133,7 @@ class Player:
 
         self.land = False
         self.view_x = clamp(self.x - 960, 0, 1680)
-        self.view_y = clamp(self.y - 480, 0, 2080)
+        self.view_y = clamp(self.y - 320, 0, 2000)
 
     def draw(self, a,b):
         self.state_machine.draw()
@@ -248,11 +250,11 @@ class Player:
         right = self.x + 25
         top = self.y + 30
 
-        # Modify for crouching state
-        if self.state_machine.cur_state in [Crouch, CrouchMove]:
-            bottom = self.y - self.f_h // 3  # Reduce height for crouching
-        elif self.state_machine.cur_state == Stunned:
-            bottom = self.y - self.f_h // 3
+        if self.state_machine.cur_state in [Crouch, CrouchMove, Stunned]:
+            left = self.x - 25
+            bottom = self.y - 33
+            right = self.x + 25
+            top = self.y
 
         return left, bottom, right, top
 
@@ -266,7 +268,7 @@ class Player:
     def use_rope(self):
         if self.rope_count > 0:
             self.rope_count -= 1
-            rope = Rope(self.x + 20, self.y + 20)
+            rope = Rope(self.x, self.y)
             game_world.add_object(rope)
             game_world.add_collision_pair('items:Map', rope, None)
 
@@ -465,7 +467,7 @@ class CrouchMove:
     def do(player):
         player.frame = (
                                    player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
-        player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time
+        player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time / 2
 
     @staticmethod
     def draw(player):
@@ -505,7 +507,8 @@ class Climb:
         player.frame = 0
         player.maxframe = 1
         player.diry  = 0
-        player.x = (player.x + 40) // 80 * 80
+        if player.ladder:
+            player.x =  player.x // 80 * 80 + 40
 
     @staticmethod
     def exit(player, e):
@@ -550,7 +553,8 @@ class ClimbMove:
         player.act = 4
         player.frame = 0
         player.maxframe = 10
-        player.x = (player.x + 40) // 80 * 80
+        if player.ladder:
+            player.x = player.x // 80 * 80 + 40
     @staticmethod
     def exit(player, e):
         pass
@@ -758,6 +762,8 @@ class Jump:
 
         @staticmethod
         def do(player):
+            player.act = 2
+            player.maxframe = 7
             player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time
             player.frame = (player.frame + 7 * ACTION_PER_TIME * game_framework.frame_time) % (player.maxframe + 1)
             if player.frame > 7:
