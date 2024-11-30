@@ -1,7 +1,7 @@
 from pico2d import *
 import game_framework
 import game_world
-from Map import Map
+from Map import Map, Tile
 from Player import Player
 from enemies import Snake, Boss
 
@@ -38,8 +38,8 @@ def init():
     game_world.add_collision_pair('Player:Monster', player, b)
     game_world.add_collision_pair('Whip:Monster', None, b)
 
-    game_world.add_collision_pair('Player:Map', player, None)  # 그룹 A에 플레이어 추가
-    for tile in map_obj.tiles.values():  # Tile 객체를 순회
+    game_world.add_collision_pair('Player:Map', player, None)
+    for tile in map_obj.tiles.values():
         if tile.tile_type != 'empty':
             game_world.add_collision_pair('Player:Map', None, tile)
             game_world.add_collision_pair('items:Map', None, tile)
@@ -61,19 +61,19 @@ def handle_events():
             if event.key == pico2d.SDLK_ESCAPE:
                 game_framework.quit()
 
-            elif event.key == pico2d.SDLK_o:  # 'o' 키로 저장
+            elif event.key == pico2d.SDLK_o:
                 map_obj.save_map("current_map.csv")
-            elif event.key == pico2d.SDLK_p:  # 'p' 키로 로드
+            elif event.key == pico2d.SDLK_p:
                 map_obj.load_map("current_map.csv")
 
             elif event.key == pico2d.SDLK_UP:
-                if player.move_stage:  # door 위에서 위쪽 화살표 입력
+                if player.move_stage:
                     load_next_stage()
                 player.handle_event(event)
             else:
                 player.handle_event(event)
         elif event.type == pico2d.SDL_MOUSEBUTTONDOWN:
-             mouse_x, mouse_y = event.x, 960 - event.y  # 화면 좌표를 맵 좌표로 변환
+             mouse_x, mouse_y = event.x, 960 - event.y
 
              world_x = camera_x + mouse_x
              world_y = camera_y + mouse_y
@@ -97,6 +97,19 @@ def update():
 
 def draw():
     pico2d.clear_canvas()
+
+    start_x = int(max(camera_x // 80, 0))
+    start_y = int(max(camera_y // 80, 0))
+    end_x = int(min((camera_x + 1920) // 80 + 1, 46))
+    end_y = int(min((camera_y + 960) // 80 + 1, 38))
+
+    for x in range(start_x, end_x):
+        for y in range(start_y, end_y):
+            screen_x = (x * 80) - camera_x
+            screen_y = (y * 80) - camera_y
+            Tile.sprite_sheet.clip_draw_to_origin(128 * 8, 128 * 6, 128, 128, screen_x, screen_y, 95, 95)
+
+
     if player.view_down == True:
         game_world.render(camera_x, camera_y - 240)
     elif player.view_up == True:
@@ -130,6 +143,7 @@ def explosive(x, y):
 
 def create_rope(self, tile_x, tile_y):
     global map_obj
+
     map_obj.add_tile('rope_head', tile_x, tile_y)
     for i in range(1, 8):
         next_y = tile_y - i

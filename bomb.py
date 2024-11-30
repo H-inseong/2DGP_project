@@ -22,8 +22,8 @@ class Bomb:
         self.land = False
 
     def draw(self,vx, vy):
-        self.image.clip_draw(128 * int(self.frame), 128 * 10, 128, 128, self.x - vx, self.y - vy ,80, 80)
-        self.image.clip_draw(128 * int(self.frame), 128 * 10, 128, 128, self.x, self.y, 50, 50)
+        self.image.clip_draw_to_origin(128 * int(self.frame), 128 * 10, 128, 128, self.x - vx, self.y - vy ,80, 80)
+        self.image.clip_draw_to_origin(128 * int(self.frame), 128 * 10, 128, 128, self.x, self.y, 50, 50)
 
     def update(self):
         self.x += self.velocity * game_framework.frame_time

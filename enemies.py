@@ -138,7 +138,7 @@ class Boss:
     def chase_player(self):
         self.roll_timer += game_framework.frame_time
         self.maxframe = 9
-        self.action = 8
+        self.action = 9
         self.x += self.roll_speed * self.direction * game_framework.frame_time
         if abs(play_mode.player.x - self.x) < 50:  # 플레이어 근처에 도달
             self.recover_timer = 2  # 2초 동안 회복 상태

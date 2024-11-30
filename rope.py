@@ -21,11 +21,11 @@ class Rope:
         self.land = False
         self.max_height = self.y // 80 + 7
 
+
     def draw(self,vx, vy):
         self.image.clip_draw_to_origin(128 * 10, 0, 128, 128, self.x - vx, self.y - vy ,80, 80)
         draw_rectangle(*self.get_bb())
 
-    # rope.py
     def update(self):
         global map_obj
         self.y += self.velocity * game_framework.frame_time

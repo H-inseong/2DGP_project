@@ -31,7 +31,6 @@ def remove_object(o):
             remove_collision_object(o)
             del o
             return
-    raise ValueError('Cannot delete non-existing object')
 
 def clear():
     for layer in world:
