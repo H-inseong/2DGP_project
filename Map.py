@@ -112,6 +112,7 @@ class Map:
             for y in range(start_y, end_y):
                 self.tiles[(x, y)].draw(camera_x, camera_y)
 
+
     def add_tile(self, tile_type, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
             current_tile = self.tiles.get((x, y))
@@ -121,7 +122,7 @@ class Map:
             game_world.add_object(new_tile, 0)
             if tile_type != 'empty':
                 game_world.add_collision_pair('Player:Map', None, new_tile)
-                game_world.add_collision_pair('items:Map', None, new_tile)
+                game_world.add_collision_pair('Item:Map', None, new_tile)
 
     def is_passable(self, x, y):
         if (x, y) in self.tiles:

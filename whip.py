@@ -18,6 +18,7 @@ class Whip:
         self.aa = False
         self.direction = 1
         game_world.add_collision_pair('Whip:Monster', self, None)
+        game_world.add_collision_pair('Whip:Item', self, None)
 
     def draw(self, x, y):
         if self.direction == 1:

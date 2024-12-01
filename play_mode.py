@@ -3,6 +3,7 @@ from select import select
 
 import game_framework
 import game_world
+from Item import Item
 from Map import Map, Tile
 from Player import Player
 from enemies import Snake, Boss
@@ -46,7 +47,7 @@ def init():
     for tile in map_obj.tiles.values():
         if tile.tile_type != 'empty':
             game_world.add_collision_pair('Player:Map', None, tile)
-            game_world.add_collision_pair('items:Map', None, tile)
+            game_world.add_collision_pair('Item:Map', None, tile)
     map_obj.load_map("current_map.csv")
 
 
@@ -101,7 +102,7 @@ def handle_events():
              if event.button == 1:
                  set_solid_tile(tile_x, tile_y, select_tile)
              elif event.button == 3:
-                 set_solid_tile(tile_x, tile_y, 'empty')
+                 Item(tile_x, tile_y, 2, 15)
         else:
             player.handle_event(event)
 

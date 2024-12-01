@@ -51,6 +51,7 @@ class Player:
             Player.damage = load_wav('heartbeat.wav')
 
     def __init__(self, x, y):
+        self.spishoes = None
         self.ui = UI.UIP()
         self.state_machine = StateMachine(self)
         self.state_machine.start(Idle)
@@ -223,9 +224,7 @@ class Player:
                 case ('rope'):
                     self.gold += other.value
                 case ('spike shoes'):
-                    self.gold += other.value
-                case ('spring shoes'):
-                    self.bomb_count += other.value
+                    self.sprshoes = True
                 case ('arrow'):
                     if other.dx != 0:
                         self.hp -= 1

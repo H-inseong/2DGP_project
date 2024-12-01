@@ -50,7 +50,7 @@ class Bomb:
 
     def handle_collision(self, group, other):
         match(group):
-            case('items:Map'):
+            case('Item:Map'):
                 if other.tile_type in ['solid', 'border']:
                     self.resolve_collision(other)
 
