@@ -1,4 +1,6 @@
 from pico2d import *
+from select import select
+
 import game_framework
 import game_world
 from Map import Map, Tile
@@ -7,7 +9,7 @@ from enemies import Snake, Boss
 
 
 def init():
-    global player, map_obj, camera_x, camera_y
+    global player, map_obj, camera_x, camera_y, select_tile
     player = Player(80 * 38, 80 * 33)
     game_world.add_object(player, 2)
 
@@ -38,6 +40,8 @@ def init():
     game_world.add_collision_pair('Player:Monster', player, b)
     game_world.add_collision_pair('Whip:Monster', None, b)"""
 
+    select_tile = 'solid'
+
     game_world.add_collision_pair('Player:Map', player, None)
     for tile in map_obj.tiles.values():
         if tile.tile_type != 'empty':
@@ -52,10 +56,12 @@ def finish():
 
 
 def handle_events():
+    global select_tile
     events = pico2d.get_events()
     for event in events:
         if event.type == pico2d.SDL_QUIT:
             game_framework.quit()
+
         elif event.type == pico2d.SDL_KEYDOWN:
 
             if event.key == pico2d.SDLK_ESCAPE:
@@ -66,12 +72,21 @@ def handle_events():
             elif event.key == pico2d.SDLK_p:
                 map_obj.load_map("current_map.csv")
 
+
+            elif event.key == pico2d.SDLK_1:
+                select_tile = 'solid'
+            elif event.key == pico2d.SDLK_2:
+                select_tile = 'ladder'
+            elif event.key == pico2d.SDLK_3:
+                select_tile = 'spike'
+
             elif event.key == pico2d.SDLK_UP:
                 if player.move_stage:
                     load_next_stage()
                 player.handle_event(event)
             else:
                 player.handle_event(event)
+
         elif event.type == pico2d.SDL_MOUSEBUTTONDOWN:
              mouse_x, mouse_y = event.x, 960 - event.y
 
@@ -81,9 +96,9 @@ def handle_events():
              tile_x = world_x // 80
              tile_y = world_y // 80
 
-             if event.button == 1:  # 왼쪽 마우스 버튼 클릭
-                 set_solid_tile(tile_x, tile_y, 'solid')
-             elif event.button == 3:  # 오른쪽 마우스 버튼 클릭 (선택 사항)
+             if event.button == 1:
+                 set_solid_tile(tile_x, tile_y, select_tile)
+             elif event.button == 3:
                  set_solid_tile(tile_x, tile_y, 'empty')
         else:
             player.handle_event(event)
@@ -126,13 +141,12 @@ def resume():
     pass
 
 def explosive(x, y):
-    global map_obj  # map_obj를 전역 변수로 사용
+    global map_obj
     affected_tiles = []
     for dx in range(-1, 2):  # -1, 0, 1
         for dy in range(-1, 2):
             affected_tiles.append((x + dx, y + dy))
 
-    # 각 면의 가운데 칸에서 한 칸 더 확장된 타일 추가
     more = [ (x, y + 2), (x, y - 2), (x - 2, y), (x + 2, y) ]
     affected_tiles.extend(more)
     affected_tiles = list(set(affected_tiles))
@@ -157,7 +171,6 @@ def create_rope(self, tile_x, tile_y):
 def set_solid_tile(x, y, tile_type):
     global map_obj
     tile = map_obj.tiles[(x, y)]
-        # 변경 가능한 타일 타입을 명확히 지정 (예: 'empty', 'spike', 'rope', 'rope_head' 등)
     map_obj.add_tile(tile_type, x, y)
 
 def save_current_state():
@@ -171,7 +184,7 @@ def save_current_state():
 
 def restore_player_state():
     global player, player_state
-    player.hp = player_state.get('hp', 40)
+    player.hp = player_state.get('hp', 4)
     player.bomb_count = player_state.get('bomb_count', 4)
     player.rope_count = player_state.get('rope_count', 4)
     player.gold = player_state.get('gold', 0)
