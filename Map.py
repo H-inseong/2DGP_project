@@ -1,4 +1,5 @@
 from sys import platlibdir
+from turtledemo.penrose import start
 
 from pico2d import *
 
@@ -45,6 +46,8 @@ class Tile:
             Tile.rope_sheet.clip_draw_to_origin(self.f * 5, 0, self.f, self.f, screen_x - 1, screen_y, self.rt, self.rt)
         elif self.tile_type == 'start':
             Tile.sprite_sheet.clip_draw_to_origin(43, 380, 300, 240, screen_x, screen_y, 160, 160)
+        elif self.tile_type == 'end':
+            Tile.sprite_sheet.clip_draw_to_origin(43, 80, 300, 240, screen_x, screen_y, 160, 160)
         left, bottom, right, top = self.get_bb()
         draw_rectangle(left - camera_x, bottom - camera_y, right - camera_x, top - camera_y)
 
@@ -55,6 +58,13 @@ class Tile:
             bottom = self.y * 80 + 20
             right = left + 50
             top = bottom + 50
+
+        elif self.tile_type in [ 'start', 'end']:
+            left = self.x * 80
+            bottom = self.y * 80
+            right = left + 160
+            top = bottom + 160
+
         else:
             left = self.x * 80
             bottom = self.y * 80

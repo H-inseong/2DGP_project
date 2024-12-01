@@ -17,9 +17,16 @@ class Bomb:
     def __init__(self, x, y, velocity = 1):
         if Bomb.image == None:
             Bomb.image = load_image('items_sheet.png')
+            Bomb.initsound = load_wav('throw_item.wav')
+            Bomb.timer = load_wav('bomb_timer.wav')
+            Bomb.endsound = load_wav('shotgun.wav')
         self.x, self.y, self.velocity = x, y, velocity * 120
         self.frame = 0
         self.land = False
+        Bomb.initsound.set_volume(64)
+        Bomb.initsound.play()
+        Bomb.timer.set_volume(64)
+        Bomb.timer.play()
 
     def draw(self,vx, vy):
         self.image.clip_draw(128 * int(self.frame), 128 * 10, 128, 128, self.x - vx, self.y - vy ,80, 80)
@@ -34,6 +41,8 @@ class Bomb:
         self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % (3 + 1)
         if self.frame > 3:
             play_mode.explosive(self.x // 80, self.y // 80)
+            Bomb.endsound.set_volume(64)
+            Bomb.endsound.play()
             game_world.remove_object(self)
 
     def get_bb(self):

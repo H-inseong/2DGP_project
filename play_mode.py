@@ -82,6 +82,8 @@ def handle_events():
 
             elif event.key == pico2d.SDLK_UP:
                 if player.move_stage:
+                    player.intodoor_sound.set_volume(32)
+                    player.intodoor_sound.play()
                     load_next_stage()
                 player.handle_event(event)
             else:
@@ -165,6 +167,8 @@ def create_rope(self, tile_x, tile_y):
             tile = map_obj.tiles[(tile_x, next_y)]
             if tile.tile_type == 'empty':
                 map_obj.add_tile('rope', tile_x, next_y)
+            elif tile.tile_type in ['rope', 'rope_head']:
+                continue
             else:
                 break
 

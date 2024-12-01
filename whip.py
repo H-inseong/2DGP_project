@@ -64,6 +64,9 @@ class Whip:
         return 0,0,0,0
 
     def activate(self):
+        from Player import Player
+        Player.whip_sound.set_volume(32)
+        Player.whip_sound.play()
         self.active = True
         self.frame = 0
         self.aa = False

@@ -13,12 +13,15 @@ class Rope:
     def __init__(self, x, y):
         if Rope.image == None:
             Rope.image = load_image('rope.png')
+            Rope.initsound = load_wav('ropetoss.wav')
+            Rope.endsound = load_wav('ropecatch.wav')
         self.x, self.y= x // 80 * 80, y // 80 * 80
         self. velocity = 1000
         self.frame = 0
         self.land = False
         self.max_height = self.y // 80 + 7
-
+        Rope.initsound.set_volume(64)
+        Rope.initsound.play()
 
     def draw(self,vx, vy):
         self.image.clip_draw_to_origin(128 * 10, 0, 128, 128, self.x - vx, self.y - vy ,80, 80)
@@ -33,6 +36,8 @@ class Rope:
 
         if tile_y >= self.max_height:
             play_mode.create_rope(self, tile_x, tile_y)
+            Rope.endsound.set_volume(64)
+            Rope.endsound.play()
             game_world.remove_object(self)
 
     def get_bb(self):
@@ -65,6 +70,8 @@ class Rope:
         elif min_overlap == overlap_bottom:
             self.y -= overlap_bottom
             play_mode.create_rope(self, int(self.x // 80), int(self.y // 80) )
+            Rope.endsound.set_volume(64)
+            Rope.endsound.play()
             game_world.remove_object(self)
 
         elif min_overlap == overlap_top:

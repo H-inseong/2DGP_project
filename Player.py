@@ -1,6 +1,7 @@
 from sys import platlibdir
 
 from pico2d import *
+from pygame.examples.chimp import load_sound
 
 import UI
 import game_framework
@@ -32,11 +33,22 @@ GRAVITY = -777
 class Player:
     image = None
     sec_image = None
+    sound = None
+
     def load_image(self):
         if Player.image is None:
             Player.image = load_image('Sprite_Sheet.png')
         if Player.sec_image is None:
             Player.sec_image = load_image('boss.png')
+        if Player.sound is None:
+            Player.jump_sound = load_wav('jump.wav')
+            Player.whip_sound = load_wav('knifeattack.wav')
+            Player.land_sound = load_wav('land.wav')
+            Player.up_sound = load_wav('up.wav')
+            Player.down_sound = load_wav('down.wav')
+            Player.intodoor_sound = load_wav('intodoor.wav')
+            Player.spikehit = load_wav('spike_hit.wav')
+            Player.damage = load_wav('heartbeat.wav')
 
     def __init__(self, x, y):
         self.ui = UI.UIP()
@@ -110,6 +122,9 @@ class Player:
         else:
             self.ladder = False
 
+        if current_tile_type in ['end']:
+            self.move_stage = True
+
         if self.hp < 1:
             self.state_machine.start(Dead)
 
@@ -182,6 +197,10 @@ class Player:
                     if self.velocity_y < -200:
                         self.hp = 0
                         self.state_machine.start(Dead)
+                        if self.aa == False:
+                            self.spikehit.set_volume(32)
+                            self.spikehit.play()
+                            self.aa = True
 
                 if other.tile_type == 'door':
                     self.move_stage = True
@@ -237,9 +256,12 @@ class Player:
             self.y -= overlap_bottom
             self.velocity_y = 0
 
-        elif min_overlap == overlap_top:
+        if min_overlap == overlap_top:
             self.y += overlap_top
             self.velocity_y = 0
+            if self.jumped == True:
+                self.land_sound.set_volume(64)
+                self.land_sound.play()
             self.jumped = False
             self.land = True
             self.state_machine.add_event(('landed', 0))
@@ -275,6 +297,8 @@ class Player:
 
     def take_damage(self, monster):
         self.hp -= 1
+        self.damage.set_volume(32)
+        self.damage.play()
         self.invincible = True
         self.invincible_timer = 1.5
 
@@ -519,10 +543,10 @@ class Climb:
     def do(player):
 
         if not player.ladder:
-            player.state_machine.start(Idle)  # 사다리를 벗어나면 Idle 상태로 전환
+            player.state_machine.start(Idle)
         else:
             if player.state_machine.cur_state in [Climb, ClimbMove]:
-                player.velocity_y = 0  # 중력 무시
+                player.velocity_y = 0
         if player.frame < 4:
             player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
 
@@ -551,6 +575,13 @@ class ClimbMove:
         if c_down(e):
             player.use_rope()
 
+        if player.diry == 1:
+            player.up_sound.set_volume(32)
+            player.up_sound.play()
+        elif player.diry == -1:
+            player.down_sound.set_volume(32)
+            player.down_sound.play()
+
         player.act = 4
         player.frame = 0
         player.maxframe = 10
@@ -567,6 +598,7 @@ class ClimbMove:
         else:
             if player.state_machine.cur_state in [Climb, ClimbMove]:
                 player.velocity_y = 0
+
 
         player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
         player.y += player.diry * RUN_SPEED_PPS * game_framework.frame_time
@@ -751,6 +783,8 @@ class Jump:
                 player.velocity_y = 400  # 점프 초기 속도 (픽셀/초)
                 player.jumped = True
                 player.land = False
+                player.jump_sound.set_volume(64)
+                player.jump_sound.play()
             if c_down(e):
                 player.use_rope()
             player.act = 2
@@ -769,6 +803,7 @@ class Jump:
             player.frame = (player.frame + 7 * ACTION_PER_TIME * game_framework.frame_time) % (player.maxframe + 1)
             if player.frame > 7:
                 player.frame = 7
+
         @staticmethod
         def draw(player):
             player.act = 2
