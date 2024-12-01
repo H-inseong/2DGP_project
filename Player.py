@@ -123,11 +123,12 @@ class Player:
         else:
             self.dirx = 0
 
-        if not self.land:
+        if self.land or self.state_machine.cur_state in [Climb, ClimbMove]:
+            pass
+        else:
             if self.velocity_y > -777:
                 self.velocity_y += GRAVITY * game_framework.frame_time
             self.y += self.velocity_y * game_framework.frame_time
-
 
         self.state_machine.update()
 
