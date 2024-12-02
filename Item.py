@@ -86,7 +86,7 @@ class Item:
 
 
     def get_bb(self):
-        return self.x, self.y, self.x + 50, self.y + 50
+        return self.x, self.y, self.x + 80, self.y + 80
 
 
 

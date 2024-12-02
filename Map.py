@@ -133,7 +133,6 @@ class Map:
         pass
 
     def save_map(self, filename):
-        """Save the map to a file, ensuring the top row is saved first."""
         with open(filename, 'w') as file:
             for y in reversed(range(self.height)):  # Reverse the Y-axis
                 row = [self.tiles[(x, y)].tile_type for x in range(self.width)]
