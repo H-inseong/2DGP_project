@@ -1,8 +1,4 @@
 # game_world.py
-from pico2d import *
-import Player
-import Map
-import Item
 
 world = [[] for _ in range(4)]  # 깊이별로 객체를 관리 (0~3)
 

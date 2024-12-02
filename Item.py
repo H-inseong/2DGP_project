@@ -9,12 +9,14 @@ GRAVITY = -777
 
 class Item:
     image = None
+    items_to_create = []
+    items_to_remove = []
     def __init__(self, x, y, x_i, y_i):
         if Item.image == None:
             Item.image = load_image('items_sheet.png')
         self.x, self.y = x * 80, y * 80
-        self.dx, self.dy = 0, 0
         self.x_index, self.y_index = x_i, y_i
+
         game_world.add_object(self)
         game_world.add_collision_pair('Items:Map', self, None)
 
@@ -61,8 +63,8 @@ class Item:
 
     def draw(self,camera_x, camera_y):
         Item.image.clip_draw_to_origin(128 * self.x_index, 128 * self.y_index, 128, 128, self.x - camera_x, self.y - camera_y, 80, 80)
-
-
+        bb = self.get_bb()
+        draw_rectangle(bb[0] - camera_x, bb[1] - camera_y, bb[2] - camera_x, bb[3] - camera_y)
 
     def update(self):
         down_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y - 1)
@@ -71,18 +73,28 @@ class Item:
         else:
             self.y += GRAVITY * game_framework.frame_time
 
+        if Item.items_to_create:
+            for item_info in Item.items_to_create:
+                x, y, x_i, y_i = item_info
+                play_mode.item_create(x ,y,x_i,y_i)
+            Item.items_to_create.clear()
+
+        if Item.items_to_remove:
+            for item in Item.items_to_remove:
+                game_world.remove_object(item)
+            Item.items_to_remove.clear()
 
 
     def get_bb(self):
-        return self.x - 40, self.y - 40, self.x + 40, self.y + 40
+        return self.x, self.y, self.x + 50, self.y + 50
 
 
 
     def handle_collision(self, group, other):
         if group == 'Player:Item':
-            if self.take == 1:
-                game_world.remove_object(self)
 
+            if self.take == 1:
+                Item.items_to_remove.append(self)
 
         if group == 'Whip:Item' and self.name == 'chest':
             possible_items = [
@@ -91,16 +103,16 @@ class Item:
             ]
 
             item_type = choice(possible_items)
-            Item(self.x, self.y, *item_type)
-            game_world.remove_object(self)
-
+            Item.items_to_create.append((self.x // 80, (self.y + 41) // 80, *item_type))
+            Item.items_to_remove.append(self)
 
         if group == 'Whip:Item' and self.name == 'item_box':
             possible_items = [
                 (0, 13),  # Bomb
                 (1, 13),  # Bombs
-                (0, 9),  # Rope
+                (0, 9),   # Rope
                 (6, 13),  # Spike Shoes
             ]
             item_type = choice(possible_items)
-            Item(self.x, self.y, *item_type)
+            Item.items_to_create.append((self.x // 80, (self.y + 41) // 80, *item_type))
+            Item.items_to_remove.append(self)

@@ -19,22 +19,14 @@ def init():
     player = Player(0,0)
     game_world.add_object(player, 2)
     game_world.add_collision_pair('Player:Map', player, None)
+    game_world.add_collision_pair('Player:Item', player, None)
+    game_world.add_collision_pair('Player:Monster', player, None)
 
-    map_obj = Map(46, 38)  # 맵 생성 (가로 46 타일, 세로 38 타일 예시)
+    map_obj = Map(46, 38)
     camera_x, camera_y = 0, 0
     map_obj.load_map(f"{stage}.csv")
     bgm.set_volume(64)
-    bgm.play()
-    """s = Snake(0)
-    b = Boss()
-    game_world.add_object(s, 1)
-    game_world.add_collision_pair('Player:Monster', player, s)
-    game_world.add_collision_pair('Whip:Monster', None, s)
-    game_world.add_object(b,  1)
-    game_world.add_collision_pair('Player:Monster', player, b)
-    game_world.add_collision_pair('Whip:Monster', None, b)"""
-
-
+    bgm.repeat_play()
 
 
 def finish():
@@ -165,33 +157,22 @@ def set_solid_tile(x, y, tile_type):
     tile = map_obj.tiles[(x, y)]
     map_obj.add_tile(tile_type, x, y)
 
-def save_current_state():
-    global player, player_state
-    player_state = {
-        'hp': player.hp,
-        'bomb_count': player.bomb_count,
-        'rope_count': player.rope_count,
-        'gold': player.gold
-    }
-
-def restore_player_state():
-    global player, player_state
-    player.hp = player_state.get('hp', 4)
-    player.bomb_count = player_state.get('bomb_count', 4)
-    player.rope_count = player_state.get('rope_count', 4)
-    player.gold = player_state.get('gold', 0)
 
 def load_next_stage(stg):
     global player, map_obj, bgm
-    save_current_state()
     game_world.clear()
     map_obj.load_map(f"{stg}.csv")
     game_world.add_object(player, 1)
     if stg == 2:
         bgm = load_music('06. Old timer.mp3')
         bgm.set_volume(64)
-        bgm.play()
+        bgm.repeat_play()
     else:
         bgm = load_music('08. Hidden dangers.mp3')
         bgm.set_volume(64)
-        bgm.play()
+        bgm.repeat_play()
+
+
+def item_create(x, y, x_i, y_i):
+    Item(x, y, x_i, y_i)
+    return None

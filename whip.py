@@ -38,7 +38,8 @@ class Whip:
                                         self.x - 20 + (6 - int(self.frame)) * 15 - x, self.y - y, 60, 60)
         if int(self.frame) == 5:
             aa = True
-        draw_rectangle(*self.get_bb())
+        bb = self.get_bb()
+        draw_rectangle(bb[0] - x, bb[1] - y, bb[2] - x, bb[3] - y)
 
     def update(self, player_x, player_y, player_direction):
         if self.active:

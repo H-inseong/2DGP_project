@@ -158,7 +158,6 @@ class Player:
         if DEBUG:
             bb = self.get_bb()
             draw_rectangle(bb[0] - self.view_x, bb[1] - self.view_y, bb[2] - self.view_x, bb[3] - self.view_y)
-            draw_rectangle(self.x - 2, self.y - 2, self.x + 2, self.y + 2)
 
     def handle_event(self, event):
         if event.type == SDL_KEYDOWN:
@@ -212,6 +211,7 @@ class Player:
                     pass
 
         elif group == 'Player:Item':
+            print('아이템 충돌')
             match (other.name):
                 case('Gold Bar'):
                     self.gold += other.value
@@ -285,14 +285,14 @@ class Player:
             self.bomb_count -= 1
             bomb = Bomb(self.x, self.y, self.face_dir * 10)
             game_world.add_object(bomb)
-            game_world.add_collision_pair('items:Map', bomb, None)
+            game_world.add_collision_pair('Item:Map', bomb, None)
 
     def use_rope(self):
         if self.rope_count > 0:
             self.rope_count -= 1
             rope = Rope(self.x, self.y)
             game_world.add_object(rope)
-            game_world.add_collision_pair('items:Map', rope, None)
+            game_world.add_collision_pair('Item:Map', rope, None)
 
     def take_damage(self, monster):
         self.hp -= 1
@@ -855,10 +855,10 @@ class Attack:
     @staticmethod
     def do(player):
         player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time
-        player.frame = (player.frame + 6 * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
+        player.frame = (player.frame + 6 * ACTION_PER_TIME * game_framework.frame_time) % (player.maxframe + 1)
         player.whip.update(player.x, player.y, player.face_dir)
 
-        if int(player.frame) == 0 and player.aa:
+        if player.frame > 6:
             player.state_machine.add_event(('TIME_OUT', 0))
 
     @staticmethod

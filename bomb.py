@@ -11,7 +11,7 @@ from state_machine import landed
 TIME_PER_ACTION = 2
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 3
-GRAVITY = -50
+GRAVITY = -300
 class Bomb:
     image = None
     def __init__(self, x, y, velocity = 1):

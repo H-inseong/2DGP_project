@@ -5,6 +5,7 @@ from pico2d import *
 
 import game_world
 import play_mode
+from Item import Item
 
 screen_width = 1920
 screen_height = 960
@@ -145,8 +146,16 @@ class Map:
             for y, line in enumerate(reversed(lines)):  # 파일의 첫 줄이 맵의 상단
                 tile_types = line.strip().split(',')
                 for x, tile_type in enumerate(tile_types):
+
+                    if tile_type == 'item':
+                        self.add_tile('empty', x, y)  # x, y 좌표에 타일 추가
+                        Item(x, y, 2, 15)
+                        continue
+
                     self.add_tile(tile_type, x, y)  # x, y 좌표에 타일 추가
+
                     if tile_type == 'start':
+                        self.add_tile(tile_type, x, y)  # x, y 좌표에 타일 추가
                         play_mode.player.x = 80 * x + 70
                         play_mode.player.y = 80 * y
         print(f"Map loaded from {filename}")
