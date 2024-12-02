@@ -22,6 +22,8 @@ class Rope:
         self.max_height = self.y // 80 + 7
         Rope.initsound.set_volume(64)
         Rope.initsound.play()
+        game_world.add_object(self)
+        game_world.add_collision_pair('Item:Map', self, None)
 
     def draw(self,vx, vy):
         self.image.clip_draw_to_origin(128 * 10, 0, 128, 128, self.x - vx, self.y - vy ,80, 80)

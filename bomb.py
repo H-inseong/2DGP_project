@@ -27,6 +27,8 @@ class Bomb:
         Bomb.initsound.play()
         Bomb.timer.set_volume(64)
         Bomb.timer.play()
+        game_world.add_object(self)
+        game_world.add_collision_pair('Item:Map', self, None)
 
     def draw(self,vx, vy):
         self.image.clip_draw(128 * int(self.frame), 128 * 10, 128, 128, self.x - vx, self.y - vy ,80, 80)

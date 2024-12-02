@@ -283,16 +283,14 @@ class Player:
     def use_bomb(self):
         if self.bomb_count > 0:
             self.bomb_count -= 1
-            bomb = Bomb(self.x, self.y, self.face_dir * 10)
-            game_world.add_object(bomb)
-            game_world.add_collision_pair('Item:Map', bomb, None)
+            Bomb(self.x, self.y, self.face_dir * 10)
+
 
     def use_rope(self):
         if self.rope_count > 0:
             self.rope_count -= 1
-            rope = Rope(self.x, self.y)
-            game_world.add_object(rope)
-            game_world.add_collision_pair('Item:Map', rope, None)
+            Rope(self.x, self.y)
+
 
     def take_damage(self, monster):
         self.hp -= 1

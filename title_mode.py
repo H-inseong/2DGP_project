@@ -1,5 +1,5 @@
 import pico2d
-from sdl2 import SDL_QUIT, SDL_KEYDOWN, SDLK_ESCAPE, SDLK_SPACE
+from sdl2 import SDL_QUIT, SDL_KEYDOWN, SDLK_ESCAPE, SDLK_SPACE, SDLK_a
 
 import game_framework
 from pico2d import load_image, get_time, clear_canvas, update_canvas, get_events
@@ -12,7 +12,7 @@ def init():
     bgm = pico2d.load_music('01. Dwelling.mp3')
     bgm.set_volume(64)
     bgm.play()
-    image = load_image('logo.png')
+    image = load_image('title.png')
 
 def finish():
     global image, bgm
@@ -23,7 +23,7 @@ def update():
 
 def draw():
     clear_canvas()
-    image.clip_draw_to_origin(0, 0, 2000, 1125, 0,0,1920,960 )
+    image.clip_draw_to_origin(0, 0, 1920, 1080, 0,0,1920,960 )
     update_canvas()
 
 def handle_events():
@@ -33,5 +33,5 @@ def handle_events():
             game_framework.quit()
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             game_framework.quit()
-        elif (event.type, event.key) == (SDL_KEYDOWN, SDLK_SPACE):
+        elif (event.type, event.key) == (SDL_KEYDOWN, SDLK_SPACE) or (event.type, event.key) == (SDL_KEYDOWN, SDLK_a):
             game_framework.change_mode(play_mode)

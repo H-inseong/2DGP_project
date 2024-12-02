@@ -67,7 +67,7 @@ class Item:
         draw_rectangle(bb[0] - camera_x, bb[1] - camera_y, bb[2] - camera_x, bb[3] - camera_y)
 
     def update(self):
-        down_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y - 1)
+        down_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y)
         if down_tile_type in ['border', 'solid']:
             pass
         else:

@@ -16,17 +16,17 @@ def init():
 
     bgm = load_music('03. Menu.mp3')
 
-    player = Player(0,0)
+    player = Player(80 * 34,80 * 32)
     game_world.add_object(player, 2)
     game_world.add_collision_pair('Player:Map', player, None)
     game_world.add_collision_pair('Player:Item', player, None)
     game_world.add_collision_pair('Player:Monster', player, None)
-
     map_obj = Map(46, 38)
     camera_x, camera_y = 0, 0
-    map_obj.load_map(f"{stage}.csv")
+
     bgm.set_volume(64)
     bgm.repeat_play()
+    map_obj.load_map(f"{stage}.csv")
 
 
 def finish():
