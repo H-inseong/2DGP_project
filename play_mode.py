@@ -8,30 +8,23 @@ from Map import Map, Tile
 from Player import Player
 from enemies import Snake, Boss
 
-
 def init():
-    global player, map_obj, camera_x, camera_y, select_tile
-    player = Player(80 * 38, 80 * 33)
-    game_world.add_object(player, 2)
+    global player, map_obj, camera_x, camera_y, select_tile, stage
+    global bgm
+    stage = 1
+    select_tile = 'solid'
 
+    bgm = load_music('03. Menu.mp3')
+
+    player = Player(0,0)
+    game_world.add_object(player, 2)
+    game_world.add_collision_pair('Player:Map', player, None)
 
     map_obj = Map(46, 38)  # 맵 생성 (가로 46 타일, 세로 38 타일 예시)
-    map_obj.add_tile('ladder', 10, 10)
-    map_obj.add_tile('solid', 10, 9)
-    map_obj.add_tile('solid', 9, 9)
-    map_obj.add_tile('solid', 10, 5)
-    map_obj.add_tile('solid', 9, 5)
-    map_obj.add_tile('solid', 10, 4)
-    map_obj.add_tile('solid', 9, 4)
-
-    map_obj.add_tile('rope_head', 10, 8)
-    map_obj.add_tile('rope', 10, 7)
-    map_obj.add_tile('rope', 10, 6)
-    map_obj.add_tile('spike', 4, 4)
-    map_obj.add_tile('spike', 5, 4)
-    map_obj.add_tile('solid', 5, 3)
     camera_x, camera_y = 0, 0
-
+    map_obj.load_map(f"{stage}.csv")
+    bgm.set_volume(64)
+    bgm.play()
     """s = Snake(0)
     b = Boss()
     game_world.add_object(s, 1)
@@ -41,14 +34,6 @@ def init():
     game_world.add_collision_pair('Player:Monster', player, b)
     game_world.add_collision_pair('Whip:Monster', None, b)"""
 
-    select_tile = 'solid'
-
-    game_world.add_collision_pair('Player:Map', player, None)
-    for tile in map_obj.tiles.values():
-        if tile.tile_type != 'empty':
-            game_world.add_collision_pair('Player:Map', None, tile)
-            game_world.add_collision_pair('Item:Map', None, tile)
-    map_obj.load_map("current_map.csv")
 
 
 
@@ -57,7 +42,7 @@ def finish():
 
 
 def handle_events():
-    global select_tile
+    global select_tile, stage
     events = pico2d.get_events()
     for event in events:
         if event.type == pico2d.SDL_QUIT:
@@ -85,7 +70,9 @@ def handle_events():
                 if player.move_stage:
                     player.intodoor_sound.set_volume(32)
                     player.intodoor_sound.play()
-                    load_next_stage()
+                    stage += 1
+                    load_next_stage(stage)
+                    player.move_stage = False
                 player.handle_event(event)
             else:
                 player.handle_event(event)
@@ -194,10 +181,17 @@ def restore_player_state():
     player.rope_count = player_state.get('rope_count', 4)
     player.gold = player_state.get('gold', 0)
 
-def load_next_stage():
-    global player, map_obj
+def load_next_stage(stg):
+    global player, map_obj, bgm
     save_current_state()
     game_world.clear()
-    map_obj = Map(46, 38)
-    player.x, player.y = 240, 240
+    map_obj.load_map(f"{stg}.csv")
     game_world.add_object(player, 1)
+    if stg == 2:
+        bgm = load_music('06. Old timer.mp3')
+        bgm.set_volume(64)
+        bgm.play()
+    else:
+        bgm = load_music('08. Hidden dangers.mp3')
+        bgm.set_volume(64)
+        bgm.play()

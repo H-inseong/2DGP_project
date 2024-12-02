@@ -147,7 +147,8 @@ class Map:
                 for x, tile_type in enumerate(tile_types):
                     self.add_tile(tile_type, x, y)  # x, y 좌표에 타일 추가
                     if tile_type == 'start':
-                        play_mode.player.__init__(x*80 + 70, y*80)
+                        play_mode.player.x = 80 * x + 70
+                        play_mode.player.y = 80 * y
         print(f"Map loaded from {filename}")
 
     def get_tile_type(self, x, y):

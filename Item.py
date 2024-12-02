@@ -104,4 +104,3 @@ class Item:
             ]
             item_type = choice(possible_items)
             Item(self.x, self.y, *item_type)
-            game_world.remove_object(self)
