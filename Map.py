@@ -164,3 +164,9 @@ class Map:
         if (tile_x, tile_y) in self.tiles:
             return self.tiles[(tile_x, tile_y)].tile_type
         return None  # 타일이 없을 경우
+
+    def get_tile_position(self, tile_type):
+        for (x, y), tile in self.tiles.items():
+            if tile.tile_type == tile_type:
+                return x * 80 + 40, y * 80 + 40  # 타일의 중심 좌표
+        return None

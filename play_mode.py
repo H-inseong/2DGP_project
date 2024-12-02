@@ -16,17 +16,19 @@ def init():
 
     bgm = load_music('03. Menu.mp3')
 
-    player = Player(80 * 34,80 * 32)
+    map_obj = Map(46, 38)
+    player = Player(0,0)
+    map_obj.load_map(f"{stage}.csv")
+
     game_world.add_object(player, 2)
     game_world.add_collision_pair('Player:Map', player, None)
     game_world.add_collision_pair('Player:Item', player, None)
     game_world.add_collision_pair('Player:Monster', player, None)
-    map_obj = Map(46, 38)
     camera_x, camera_y = 0, 0
 
     bgm.set_volume(64)
     bgm.repeat_play()
-    map_obj.load_map(f"{stage}.csv")
+    player.x, player.y = map_obj.get_tile_position('start')
 
 
 def finish():
@@ -106,13 +108,7 @@ def draw():
             screen_y = (y * 80) - camera_y
             Tile.sprite_sheet.clip_draw_to_origin(128 * 8, 128 * 6, 128, 128, screen_x, screen_y, 95, 95)
 
-
-    if player.view_down == True:
-        game_world.render(camera_x, camera_y - 240)
-    elif player.view_up == True:
-        game_world.render(camera_x, camera_y + 240)
-    else:
-        game_world.render(camera_x, camera_y)
+    game_world.render(camera_x, camera_y)
     pico2d.update_canvas()
 
 

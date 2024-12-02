@@ -117,14 +117,17 @@ class Player:
                 self.invincible = False
 
         current_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y)
+        side_tile_type = play_mode.map_obj.get_tile_type(self.x - 80, self.y)
         if current_tile_type in ['ladder', 'rope', 'rope_head']:
             self.ladder = True
             self.jumped = False
         else:
             self.ladder = False
 
-        if current_tile_type in ['end']:
+        if current_tile_type in ['end'] or side_tile_type in ['end']:
             self.move_stage = True
+        else:
+            self.move_stage = False
 
         if self.hp < 1:
             self.state_machine.start(Dead)
@@ -197,13 +200,10 @@ class Player:
                     if self.velocity_y < -200:
                         self.hp = 0
                         self.state_machine.start(Dead)
-                        if self.aa == False:
+                        if not self.aa:
                             self.spikehit.set_volume(32)
                             self.spikehit.play()
                             self.aa = True
-
-                if other.tile_type == 'door':
-                    self.move_stage = True
 
                 if other.tile_type in ['rope', 'ladder', 'rope_head']:
                     self.ladder = True
@@ -224,13 +224,39 @@ class Player:
                 case ('rope'):
                     self.gold += other.value
                 case ('spike shoes'):
-                    self.sprshoes = True
+                    self.spishoes = True
                 case ('arrow'):
                     if other.dx != 0:
                         self.hp -= 1
 
         elif group == 'Player:Monster' and not self.invincible:
-            self.take_damage(other)
+            self.monster_collision(other)
+
+
+    def monster_collision(self, enemy):
+        player_bb = self.get_bb()
+        enemy_bb = enemy.get_bb()
+
+        overlap_left = player_bb[2] - enemy_bb[0]
+        overlap_right = enemy_bb[2] - player_bb[0]
+        overlap_bottom = player_bb[3] - enemy_bb[1]
+        overlap_top = enemy_bb[3] - player_bb[1]
+
+        min_overlap = min(overlap_left, overlap_right, overlap_bottom, overlap_top)
+
+        if min_overlap == overlap_left:
+            self.take_damage(enemy)
+
+        elif min_overlap == overlap_right:
+            self.take_damage(enemy)
+
+        elif min_overlap == overlap_bottom:
+            enemy.take_damage(self.spishoes)
+            self.velocity_y = 100
+
+        if min_overlap == overlap_top:
+            self.take_damage(enemy)
+
 
     def resolve_collision(self, tile):
         player_bb = self.get_bb()

@@ -87,8 +87,14 @@ class Boss:
         self.roll_timer = 0
         self.recover_timer = 0
         self.build_behavior_tree()
+        self.invincible = False  # 무적 상태 여부
+        self.invincible_timer = 0  # 무적 상태 지속 시간
 
     def update(self):
+        if self.invincible:
+            self.invincible_timer -= game_framework.frame_time
+            if self.invincible_timer <= 0:
+                self.invincible = False
         self.frame = (self.frame + self.maxframe * game_framework.frame_time) % self.maxframe
         self.bt.run()
 
@@ -165,3 +171,13 @@ class Boss:
 
     def get_bb(self):
         return self.x - 80, self.y - 80, self.x + 80, self.y + 80
+
+    def take_damage(self, spi):
+        if not self.invincible:
+            if spi:
+                self.hp -= 3
+                self.invincible = True
+                self.invincible_timer = 2
+            else:
+                pass
+            #boss는 신발이 없으면 밟히지 않음

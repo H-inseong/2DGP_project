@@ -14,6 +14,8 @@ class Item:
     def __init__(self, x, y, x_i, y_i):
         if Item.image == None:
             Item.image = load_image('items_sheet.png')
+            Item.chest = load_wav('chestopen.wav')
+            Item.crate = load_wav('crateopen.wav')
         self.x, self.y = x * 80, y * 80
         self.x_index, self.y_index = x_i, y_i
 
