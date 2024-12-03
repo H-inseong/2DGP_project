@@ -7,6 +7,7 @@ from pico2d import *
 import game_world
 import play_mode
 from Item import Item
+from enemies import Snake
 
 screen_width = 1920
 screen_height = 960
@@ -60,8 +61,6 @@ class Tile:
             Tile.sprite_sheet.clip_draw_to_origin(43, 380, 300, 240, screen_x, screen_y, 160, 160)
         elif self.tile_type == 'end':
             Tile.sprite_sheet.clip_draw_to_origin(43, 80, 300, 240, screen_x, screen_y, 160, 160)
-        left, bottom, right, top = self.get_bb()
-        draw_rectangle(left - camera_x, bottom - camera_y, right - camera_x, top - camera_y)
 
     def get_bb(self):
         # 충돌 박스 (bounding box) 정의
@@ -136,6 +135,8 @@ class Map:
             if tile_type != 'empty':
                 game_world.add_collision_pair('Player:Map', None, new_tile)
                 game_world.add_collision_pair('Item:Map', None, new_tile)
+                game_world.add_collision_pair('Monster:Map', None, new_tile)
+
 
     def is_passable(self, x, y):
         if (x, y) in self.tiles:
@@ -162,6 +163,14 @@ class Map:
                         self.add_tile('empty', x, y)  # x, y 좌표에 타일 추가
                         Item(x, y, 2, 15)
                         continue
+                    elif tile_type == 'chest':
+                        self.add_tile('empty', x, y)  # x, y 좌표에 타일 추가
+                        Item(x, y, 0, 15)
+                        continue
+                    elif tile_type == 'snake':
+                        self.add_tile('empty', x, y)  # x, y 좌표에 타일 추가
+                        Snake(x, y, 0, 15)
+                        continue
 
                     self.add_tile(tile_type, x, y)  # x, y 좌표에 타일 추가
 
@@ -169,6 +178,7 @@ class Map:
                         self.add_tile(tile_type, x, y)  # x, y 좌표에 타일 추가
                         play_mode.player.x = 80 * x + 70
                         play_mode.player.y = 80 * y
+
         print(f"Map loaded from {filename}")
 
     def get_tile_type(self, x, y):

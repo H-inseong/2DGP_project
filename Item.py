@@ -20,6 +20,7 @@ class Item:
             Item.getbomb = load_wav('webshot.wav')
             Item.getgold = load_wav('gem1.wav')
             Item.getgoldbar = load_wav('gem5.wav')
+
         self.x, self.y = x * 80, y * 80
         self.x_index, self.y_index = x_i, y_i
 

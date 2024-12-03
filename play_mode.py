@@ -19,10 +19,7 @@ def init():
     player = Player(0,0)
     map_obj.load_map(f"{stage}.csv")
 
-    game_world.add_object(player, 2)
-    game_world.add_collision_pair('Player:Map', player, None)
-    game_world.add_collision_pair('Player:Item', player, None)
-    game_world.add_collision_pair('Player:Monster', player, None)
+
     camera_x, camera_y = 0, 0
 
     bgm.set_volume(32)

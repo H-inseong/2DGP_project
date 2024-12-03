@@ -26,12 +26,15 @@ class Snake:
     def load_images(self):
         if Snake.image == None:
             Snake.image = load_image('Snakes.png')
-    def __init__(self, color):
+    def __init__(self):
+        game_world.add_object(self, 1)
+        game_world.add_collision_pair('Player:Monster', None, self)
+        game_world.add_collision_pair('Whip:Monster', None, self)
+
         self.x, self.y = random.randint(1600-800, 1600), 240
         self.load_images()
         self.f_size = 80
         self.frame = 0
-        self.color = color  # 0 : blue  1 : green
         self.dir = random.choice([-1,1])
         self.attack = False
 
@@ -51,13 +54,13 @@ class Snake:
 
     def draw(self, x, y):
         if self.dir < 0:
-            Snake.image.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.color + self.f_size + 28, self.f_size, self.f_size, 0, 'h', self.x - x + 40, self.y - y + 40, 80, 80)
+            Snake.image.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.f_size + 28,
+                                            self.f_size, self.f_size, 0, 'h',
+                                            self.x - x + 40, self.y - y + 40, 80, 80)
         else:
-            Snake.image.clip_draw_to_origin(int(self.frame) * self.f_size,
-                                  self.f_size * self.color + self.f_size + 28,
-                                  self.f_size, self.f_size,
-                                  self.x - x, self.y - y )
-        draw_rectangle(*self.get_bb())
+            Snake.image.clip_draw_to_origin(int(self.frame) * self.f_size, self.f_size + 28,
+                                            self.f_size, self.f_size,
+                                            self.x - x, self.y - y , 80, 80)
 
     def handle_event(self, event):
         pass
@@ -73,15 +76,21 @@ class Snake:
 class Boss:
     image = None
 
-    def __init__(self):
+    def __init__(self, x, y):
+        game_world.add_object(self, 1)
+        game_world.add_collision_pair('Player:Monster', None, self)
+        game_world.add_collision_pair('Whip:Monster', None, self)
+        game_world.add_collision_pair('Monster:Map', self, None)
+
         if Boss.image is None:
             Boss.image = load_image('boss.png')
-        self.x, self.y = 1600, 240  # 초기 위치
+
+        self.x, self.y = x * 80, y * 80
         self.frame = 0
         self.maxframe = 9
         self.action = 15
         self.direction = -1  # -1: 왼쪽, 1: 오른쪽
-        self.hp = 100
+        self.hp = 10
         self.speed = RUN_SPEED_PPS / 2
         self.roll_speed = RUN_SPEED_PPS * 3
         self.roll_timer = 0
@@ -164,6 +173,12 @@ class Boss:
             self.hp -= 1
             if self.hp <= 0:
                 game_world.remove_object(self)
+        if group == 'Monster:Map':
+        if isinstance(other, Tile):
+            if other.tile_type == 'empty':
+                self.land = False
+            if other.tile_type in ['solid', 'border']:
+                self.resolve_collision(other)
 
     def drop_items(self):
         # 아이템 드롭 로직
