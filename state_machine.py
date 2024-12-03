@@ -48,6 +48,8 @@ def time_out(e):
 def landed(e):
     return e[0] == 'landed'
 
+def floating(e):
+    return e[0] == 'floating'
 
 
 

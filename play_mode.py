@@ -1,5 +1,4 @@
 from pico2d import *
-from select import select
 
 import game_framework
 import game_world

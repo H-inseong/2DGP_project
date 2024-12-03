@@ -59,19 +59,19 @@ class Player:
             {
                 Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run,
                        space_down: Jump, down_down: Crouch,  up_down: Idle, up_up: Idle,
-                       z_down: Attack, x_down: Idle, c_down: Idle},
+                       z_down: Attack, x_down: Idle, c_down: Idle, floating: Jump},
                 Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle,
-                      space_down: Jump, down_down: CrouchMove, z_down: Attack, c_down:Run},
+                      space_down: Jump, down_down: CrouchMove, z_down: Attack, x_down: Run, c_down:Run, floating: Jump},
 
-                Crouch: {down_up: Idle, left_down: CrouchMove, right_down:CrouchMove, down_down: Crouch, z_down: Attack, space_down: Jump, c_down:Crouch},
-                CrouchMove : {left_up: Crouch, right_up:Crouch, left_down: Crouch, right_down:Crouch, down_up: Run, space_down: Jump, c_down:Crouch},
-                Climb: {up_up: ClimbMove, up_down: ClimbMove, down_up: ClimbMove, down_down: ClimbMove, z_down: Idle, c_down:Climb, space_down: Jump},
-                ClimbMove: {up_up: Climb, up_down: ClimbMove, down_up:Climb, down_down: ClimbMove, c_down:Climb, space_down: Jump},
+                Crouch: {down_up: Idle, left_down: CrouchMove, right_down:CrouchMove, down_down: Crouch, z_down: Attack, space_down: Jump, x_down:Crouch, c_down:Crouch, floating: Jump},
+                CrouchMove : {left_up: Crouch, right_up:Crouch, left_down: Crouch, right_down:Crouch, down_up: Run, space_down: Jump, x_down:CrouchMove, c_down:CrouchMove, floating: Jump},
+                Climb: {up_up: ClimbMove, up_down: ClimbMove, down_up: ClimbMove, down_down: ClimbMove, z_down: Idle, x_down:Climb,c_down:Climb, space_down: Jump, floating: Jump},
+                ClimbMove: {up_up: Climb, up_down: ClimbMove, down_up:Climb, down_down: ClimbMove, x_down:Climb ,c_down:Climb, space_down: Jump, floating: Jump},
 
                 Stunned: { time_out: Idle },
                 Attack: { right_up: Attack, left_up: Attack, right_down: Attack, left_down: Attack, space_down: Jump, time_out: Run, c_down:Attack},
-                Jump: { right_down: Jump, left_down: Jump , landed: Run, c_down:Jump, up_down: ClimbMove},
-                Dead: { time_out: Dead}
+                Jump: { right_down: Jump, left_down: Jump , landed: Run, x_down:Jump, c_down:Jump, up_down: ClimbMove},
+                Dead: { time_out: Dead }
             }
         )
         #f = frame
@@ -116,21 +116,30 @@ class Player:
             if self.invincible_timer <= 0:
                 self.invincible = False
 
-        current_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y)
+        currenttop_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y + 34)
+        currentdown_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y -33)
         side_tile_type = play_mode.map_obj.get_tile_type(self.x - 80, self.y)
-        if current_tile_type in ['ladder', 'rope', 'rope_head']:
-            self.ladder = True
-            self.jumped = False
+        downleft_tile_type = play_mode.map_obj.get_tile_type(self.x - 26, self.y - 35)
+        downright_tile_type = play_mode.map_obj.get_tile_type(self.x+ 26, self.y - 35)
+        if currenttop_tile_type in ['ladder', 'rope', 'rope_head']:
+            if currentdown_tile_type in ['ladder', 'rope', 'rope_head']:
+                self.ladder = True
+                self.jumped = False
+            else:
+                self.ladder = False
         else:
             self.ladder = False
 
-        if current_tile_type in ['end'] or side_tile_type in ['end']:
+        if currentdown_tile_type in ['end'] or side_tile_type in ['end']:
             self.move_stage = True
         else:
             self.move_stage = False
 
         if self.hp < 1:
             self.state_machine.start(Dead)
+
+        if downleft_tile_type == 'empty' and downright_tile_type == 'empty':
+                self.state_machine.add_event(('floating', 0))
 
         if self.left_pressed and not self.right_pressed:
             self.dirx = -1
@@ -309,7 +318,10 @@ class Player:
     def use_bomb(self):
         if self.bomb_count > 0:
             self.bomb_count -= 1
-            Bomb(self.x, self.y, self.face_dir * 10)
+            if self.state_machine.cur_state in [Crouch, CrouchMove]:
+                Bomb(self.x, self.y, 0)
+            else:
+                Bomb(self.x, self.y, self.face_dir * 10)
 
 
     def use_rope(self):
@@ -448,8 +460,12 @@ class Crouch:
             player.face_dir = -1
         elif left_down(e) or right_up(e):
             player.face_dir = 1
+
+        if x_down(e):
+            player.use_bomb()
         if c_down(e):
             player.use_rope()
+
         player.act = 10
         if player.frame != 2:
             player.frame = 0
@@ -498,6 +514,8 @@ class CrouchMove:
             player.dirx, player.face_dir, player.act = 0.5, 1, 1
         elif left_down(e) or right_up(e):
             player.dirx, player.face_dir, player.act = -0.5, -1, 0
+        if x_down(e):
+            player.use_bomb()
         if c_down(e):
             player.use_rope()
         player.act = 10
@@ -541,6 +559,8 @@ class CrouchMove:
 class Climb:
     @staticmethod
     def enter(player, e):
+        if x_down(e):
+            player.use_bomb()
         if c_down(e):
             player.use_rope()
 
@@ -595,8 +615,13 @@ class ClimbMove:
             player.diry = 1
         elif down_down(e):
             player.diry = -1
+        if x_down(e):
+            player.use_bomb()
         if c_down(e):
             player.use_rope()
+
+        if player.diry == 0:
+            player.diry = 1
 
         if player.diry == 1:
             player.up_sound.set_volume(32)
@@ -731,7 +756,7 @@ class Dead:
         player.act = 9
         player.frame = 0
         player.maxframe = 12
-        if player.st_time == None:
+        if player.st_time is None:
             player.st_time = get_time()
 
     @staticmethod
@@ -740,7 +765,7 @@ class Dead:
 
     @staticmethod
     def do(player):
-        player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
+        player.frame = (player.frame + player.maxframe * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
         if get_time() - player.st_time > 5:
             game_framework.quit()
     @staticmethod
@@ -808,8 +833,16 @@ class Jump:
                 player.land = False
                 player.jump_sound.set_volume(64)
                 player.jump_sound.play()
+
+            if floating(e):
+                player.jumped = True
+                player.land = False
+
+            if x_down(e):
+                player.use_bomb()
             if c_down(e):
                 player.use_rope()
+
             player.act = 2
             player.maxframe = 7
             player.frame = 0
@@ -823,7 +856,7 @@ class Jump:
             player.act = 2
             player.maxframe = 7
             player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time
-            player.frame = (player.frame + 7 * ACTION_PER_TIME * game_framework.frame_time) % (player.maxframe + 1)
+            player.frame = (player.frame + 7 * 0.7 * game_framework.frame_time) % (player.maxframe + 1)
             if player.frame > 7:
                 player.frame = 7
 
@@ -856,6 +889,8 @@ class Attack:
             player.dirx, player.face_dir = 1, 1
         elif left_down(e):  # 왼쪽으로 RUN
             player.dirx, player.face_dir = -1, -1
+        if x_down(e):
+            player.use_bomb()
         if c_down(e):
             player.use_rope()
         player.act = 7

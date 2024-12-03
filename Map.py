@@ -118,6 +118,7 @@ class Map:
         if 0 <= x < self.width and 0 <= y < self.height:
             current_tile = self.tiles.get((x, y))
             game_world.remove_object(current_tile)
+            game_world.remove_object(current_tile)
             new_tile = Tile(tile_type, x, y)
             self.tiles[(x, y)] = new_tile
             game_world.add_object(new_tile, 0)
