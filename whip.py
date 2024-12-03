@@ -51,17 +51,17 @@ class Whip:
 
     def get_bb(self):
         if self.active:
-            if self.direction is 1:
+            if self.direction == 1:
                 if int(self.frame) in [0, 1, 2]:
                     return self.x - 20 - (6 - int(self.frame)) * 15, self.y + 50, self.x - 15, self.y + 15
                 else:
-                    return self.x - 25, self.y - 10, self.x + 25, self.y + 10
+                    return self.x - 25, self.y - 10, self.x + 40, self.y + 20
 
-            elif self.direction is -1:
+            elif self.direction == -1:
                 if int(self.frame) in [0, 1, 2]:
                     return self.x + 20 + (6 - int(self.frame)) * 15, self.y + 50, self.x + 15, self.y + 15
                 else:
-                    return self.x + 25, self.y - 10, self.x - 25, self.y + 10
+                    return self.x + 25, self.y - 10, self.x - 40, self.y + 20
         return 0,0,0,0
 
     def activate(self):

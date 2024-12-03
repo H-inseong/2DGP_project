@@ -134,7 +134,7 @@ class Map:
             self.tiles[(x, y)] = new_tile
             game_world.add_object(new_tile, 0)
 
-            if tile_type is not 'empty':
+            if tile_type != 'empty':
                 game_world.add_collision_pair('Player:Map', None, new_tile)
                 game_world.add_collision_pair('Item:Map', None, new_tile)
                 game_world.add_collision_pair('Monster:Map', None, new_tile)
@@ -155,7 +155,6 @@ class Map:
         print(f"Map saved to {filename}")
 
     def load_map(self, filename):
-        # 기존 타일 제거
         for layer in game_world.world:
             for obj in layer[:]:  # 리스트 복사로 안전하게 순회
                 if isinstance(obj, Tile):
@@ -190,6 +189,10 @@ class Map:
                 else:
                     self.add_tile(tile_type, x, y)
         game_world.add_collision_pair('Player:Map', play_mode.player, None)
+        game_world.add_collision_pair('Player:Item', play_mode.player, None)
+        game_world.add_collision_pair('Player:Monster', play_mode.player, None)
+        game_world.add_collision_pair('Whip:Monster', play_mode.player.whip, None)
+        game_world.add_collision_pair('Whip:Item', play_mode.player.whip, None)
 
         print(f"Map loaded from {filename}")
 

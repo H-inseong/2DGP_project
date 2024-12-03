@@ -815,7 +815,6 @@ class Jump:
 
             player.act = 2
             player.maxframe = 7
-            player.frame = 0
 
         @staticmethod
         def exit(player, e):
@@ -892,7 +891,7 @@ class Attack:
             player.use_rope()
         player.act = 7
 
-        if not player.whip.active:
+        if player.whip.active == False:
             player.frame = 0
         player.maxframe = 6
         player.whip.activate()
@@ -910,11 +909,12 @@ class Attack:
 
     @staticmethod
     def do(player):
+        player.maxframe = 6
         player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time
         player.frame = (player.frame + 6 * ACTION_PER_TIME * game_framework.frame_time) % (player.maxframe + 1)
         player.whip.update(player.x, player.y, player.face_dir)
 
-        if player.frame > player.maxframe:
+        if player.frame > 6:
             player.state_machine.add_event(('TIME_OUT', 0))
 
     @staticmethod
@@ -937,5 +937,5 @@ class Attack:
                                              80,
                                              80)
         player.whip.draw(player.view_x, player.view_y)
-        if int(player.frame) == 5:
-            player.aa = True
+        if player.frame > 6:
+            player.state_machine.add_event(('TIME_OUT', 0))
