@@ -128,11 +128,13 @@ class Map:
         if 0 <= x < self.width and 0 <= y < self.height:
             current_tile = self.tiles.get((x, y))
             game_world.remove_object(current_tile)
-            game_world.remove_object(current_tile)
+
+
             new_tile = Tile(tile_type, x, y)
             self.tiles[(x, y)] = new_tile
             game_world.add_object(new_tile, 0)
-            if tile_type != 'empty':
+
+            if tile_type is not 'empty':
                 game_world.add_collision_pair('Player:Map', None, new_tile)
                 game_world.add_collision_pair('Item:Map', None, new_tile)
                 game_world.add_collision_pair('Monster:Map', None, new_tile)
@@ -153,31 +155,41 @@ class Map:
         print(f"Map saved to {filename}")
 
     def load_map(self, filename):
-        with open(filename, 'r') as file:
-            lines = file.readlines()
-            for y, line in enumerate(reversed(lines)):  # 파일의 첫 줄이 맵의 상단
-                tile_types = line.strip().split(',')
-                for x, tile_type in enumerate(tile_types):
+        # 기존 타일 제거
+        for layer in game_world.world:
+            for obj in layer[:]:  # 리스트 복사로 안전하게 순회
+                if isinstance(obj, Tile):
+                    game_world.remove_object(obj)
+        try:
+            with open(filename, 'r') as file:
+                lines = file.readlines()
+        except FileNotFoundError:
+            print(f"Error: {filename} not found.")
+            return
+        except Exception as e:
+            print(f"Error reading file {filename}: {e}")
+            return
 
-                    if tile_type == 'item':
-                        self.add_tile('empty', x, y)  # x, y 좌표에 타일 추가
-                        Item(x, y, 2, 15)
-                        continue
-                    elif tile_type == 'chest':
-                        self.add_tile('empty', x, y)  # x, y 좌표에 타일 추가
-                        Item(x, y, 0, 15)
-                        continue
-                    elif tile_type == 'snake':
-                        self.add_tile('empty', x, y)  # x, y 좌표에 타일 추가
-                        Snake(x, y, 0, 15)
-                        continue
+        for y, line in enumerate(reversed(lines)):  # 파일의 첫 줄이 맵의 상단
+            tile_types = line.strip().split(',')
+            for x, tile_type in enumerate(tile_types):
 
-                    self.add_tile(tile_type, x, y)  # x, y 좌표에 타일 추가
-
-                    if tile_type == 'start':
-                        self.add_tile(tile_type, x, y)  # x, y 좌표에 타일 추가
-                        play_mode.player.x = 80 * x + 70
-                        play_mode.player.y = 80 * y
+                if tile_type == 'item':
+                    self.add_tile('empty', x, y)
+                    Item(x, y, 2, 15)
+                elif tile_type == 'chest':
+                    self.add_tile('empty', x, y)
+                    Item(x, y, 0, 15)
+                elif tile_type == 'snake':
+                    self.add_tile('empty', x, y)
+                    Snake(x, y, 0, 15)
+                elif tile_type == 'start':
+                    self.add_tile('start', x, y)
+                    play_mode.player.x = 80 * x + 70
+                    play_mode.player.y = 80 * y
+                else:
+                    self.add_tile(tile_type, x, y)
+        game_world.add_collision_pair('Player:Map', play_mode.player, None)
 
         print(f"Map loaded from {filename}")
 
@@ -185,7 +197,7 @@ class Map:
         tile_x, tile_y = int(x // 80), int(y // 80)
         if (tile_x, tile_y) in self.tiles:
             return self.tiles[(tile_x, tile_y)].tile_type
-        return None  # 타일이 없을 경우
+        return None
 
     def get_tile_position(self, tile_type):
         for (x, y), tile in self.tiles.items():

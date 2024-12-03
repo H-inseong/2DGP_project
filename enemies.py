@@ -1,5 +1,4 @@
 import random
-import math
 import game_framework
 import game_world
 
@@ -174,11 +173,11 @@ class Boss:
             if self.hp <= 0:
                 game_world.remove_object(self)
         if group == 'Monster:Map':
-        if isinstance(other, Tile):
-            if other.tile_type == 'empty':
-                self.land = False
-            if other.tile_type in ['solid', 'border']:
-                self.resolve_collision(other)
+            if isinstance(other, Tile):
+                if other.tile_type == 'empty':
+                    self.land = False
+                if other.tile_type in ['solid', 'border']:
+                    self.resolve_collision(other)
 
     def drop_items(self):
         # 아이템 드롭 로직
@@ -195,4 +194,3 @@ class Boss:
                 self.invincible_timer = 2
             else:
                 pass
-            #boss는 신발이 없으면 밟히지 않음
