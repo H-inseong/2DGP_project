@@ -25,7 +25,7 @@ def init():
     game_world.add_collision_pair('Player:Monster', player, None)
     camera_x, camera_y = 0, 0
 
-    bgm.set_volume(64)
+    bgm.set_volume(32)
     bgm.repeat_play()
     player.x, player.y = map_obj.get_tile_position('start')
 
@@ -160,11 +160,11 @@ def load_next_stage(stg):
     game_world.add_object(player, 1)
     if stg == 2:
         bgm = load_music('06. Old timer.mp3')
-        bgm.set_volume(64)
+        bgm.set_volume(32)
         bgm.repeat_play()
     else:
         bgm = load_music('08. Hidden dangers.mp3')
-        bgm.set_volume(64)
+        bgm.set_volume(32)
         bgm.repeat_play()
 
 

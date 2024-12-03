@@ -1,3 +1,4 @@
+from random import randint
 from sys import platlibdir
 from turtledemo.penrose import start
 
@@ -19,7 +20,8 @@ class Tile:
             Tile.ex_sheet = load_image('background_extrashape.png')
             Tile.wood_sheet = load_image('background_woods.png')
             Tile.rope_sheet = load_image('rope.png')
-
+        if tile_type in 'solid':
+            self.solid_num = randint(1,3)
         self.tile_type = tile_type
         self.x = x
         self.y = y
@@ -36,7 +38,16 @@ class Tile:
         elif self.tile_type == 'border':
             Tile.sprite_sheet.clip_draw_to_origin(self.f * 7, self.f * 11, self.f, self.f, screen_x, screen_y, self.rt, self.rt)
         elif self.tile_type == 'solid':
-            Tile.sprite_sheet.clip_draw_to_origin(self.f * 0, self.f * 11, self.f, self.f, screen_x, screen_y, 80, 80)
+            match(self.solid_num):
+                case (1):
+                    Tile.sprite_sheet.clip_draw_to_origin(self.f * 0, self.f * 11,
+                                                          self.f, self.f, screen_x, screen_y, 80, 80)
+                case (2):
+                    Tile.sprite_sheet.clip_draw_to_origin(self.f * 1, self.f * 11,
+                                                          self.f, self.f, screen_x, screen_y, 80, 80)
+                case (3):
+                    Tile.sprite_sheet.clip_draw_to_origin(self.f * 0, self.f * 7,
+                                                          self.f, self.f, screen_x, screen_y, 80, 80)
         elif self.tile_type == 'ladder':
             Tile.sprite_sheet.clip_draw_to_origin(self.f * 4, self.f * 10, self.f, self.f, screen_x, screen_y, 80, 80)
         elif self.tile_type == 'spike':

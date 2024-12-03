@@ -44,7 +44,7 @@ class Whip:
     def update(self, player_x, player_y, player_direction):
         if self.active:
             self.frame = (self.frame + 6 * ACTION_PER_TIME * game_framework.frame_time) % (6 + 1)
-        if int(self.frame) == 7:
+        if self.frame > 6:
             self.active = False
         self.direction = player_direction
         self.x = player_x + (40 * player_direction)

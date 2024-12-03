@@ -7,6 +7,7 @@ import UI
 import game_framework
 import game_world
 import play_mode
+from Item import Item
 from Map import Tile
 from rope import Rope
 from state_machine import *
@@ -51,7 +52,7 @@ class Player:
             Player.damage = load_wav('heartbeat.wav')
 
     def __init__(self, x, y):
-        self.spishoes = None
+        self.spishoes = False
         self.ui = UI.UIP()
         self.state_machine = StateMachine(self)
         self.state_machine.start(Idle)
@@ -70,7 +71,7 @@ class Player:
 
                 Stunned: { time_out: Idle },
                 Attack: { right_up: Attack, left_up: Attack, right_down: Attack, left_down: Attack, space_down: Jump, time_out: Run, c_down:Attack},
-                Jump: { right_down: Jump, left_down: Jump , landed: Run, x_down:Jump, c_down:Jump, up_down: ClimbMove},
+                Jump: { right_down: Jump, left_down: Jump , landed: Run, z_down: Jump, x_down:Jump, c_down:Jump, up_down: ClimbMove},
                 Dead: { time_out: Dead }
             }
         )
@@ -116,19 +117,17 @@ class Player:
             if self.invincible_timer <= 0:
                 self.invincible = False
 
-        currenttop_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y + 34)
+        currenttop_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y + 30)
         currentdown_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y -33)
         side_tile_type = play_mode.map_obj.get_tile_type(self.x - 80, self.y)
         downleft_tile_type = play_mode.map_obj.get_tile_type(self.x - 26, self.y - 35)
         downright_tile_type = play_mode.map_obj.get_tile_type(self.x+ 26, self.y - 35)
-        if currenttop_tile_type in ['ladder', 'rope', 'rope_head']:
-            if currentdown_tile_type in ['ladder', 'rope', 'rope_head']:
-                self.ladder = True
-                self.jumped = False
-            else:
-                self.ladder = False
-        else:
+
+        if currenttop_tile_type not in ['ladder', 'rope', 'rope_head'] and currentdown_tile_type not in ['ladder', 'rope', 'rope_head']:
             self.ladder = False
+        else:
+            self.ladder = True
+            self.jumped = False
 
         if currentdown_tile_type in ['end'] or side_tile_type in ['end']:
             self.move_stage = True
@@ -144,15 +143,16 @@ class Player:
         if self.left_pressed and not self.right_pressed:
             self.dirx = -1
             self.face_dir = -1
-
         elif self.right_pressed and not self.left_pressed:
             self.dirx = 1
             self.face_dir = 1
         else:
             self.dirx = 0
 
+
         if self.land or self.state_machine.cur_state in [Climb, ClimbMove]:
             pass
+
         else:
             if self.velocity_y > -777:
                 self.velocity_y += GRAVITY * game_framework.frame_time
@@ -224,15 +224,21 @@ class Player:
             match (other.name):
                 case('Gold Bar'):
                     self.gold += other.value
+                    Item.getgold.play()
                 case ('Gold Bars'):
                     self.gold += other.value
+                    Item.getgoldbar.play()
                 case ('bomb'):
                     self.bomb_count += other.value
+                    Item.getbomb.play()
                 case ('bombs'):
                     self.bomb_count += other.value
+                    Item.getbomb.play()
                 case ('rope'):
-                    self.gold += other.value
+                    self.rope_count += other.value
+                    Item.getrope.play()
                 case ('spike shoes'):
+                    Player.spikehit.play()
                     self.spishoes = True
                 case ('arrow'):
                     if other.dx != 0:
@@ -678,8 +684,7 @@ class Stunned:
 
     @staticmethod
     def do(player):
-        player.frame = (
-                                   player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
+        player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
 
         if get_time() - player.st_time > 5:
             player.state_machine.add_event(('TIME_OUT', 0))
@@ -843,6 +848,12 @@ class Jump:
             if c_down(e):
                 player.use_rope()
 
+            if z_down(e):
+                if not player.whip.active:
+                    player.frame = 0
+                player.whip.activate()
+                player.whip.update(player.x, player.y, player.face_dir)
+
             player.act = 2
             player.maxframe = 7
             player.frame = 0
@@ -857,6 +868,10 @@ class Jump:
             player.maxframe = 7
             player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time
             player.frame = (player.frame + 7 * 0.7 * game_framework.frame_time) % (player.maxframe + 1)
+
+            if player.whip.active:
+                player.whip.update(player.x, player.y, player.face_dir)
+
             if player.frame > 7:
                 player.frame = 7
 
@@ -881,6 +896,8 @@ class Jump:
                                                  player.y - player.view_y,
                                                  80,
                                                  80)
+            if player.whip.active:
+                player.whip.draw(player.view_x, player.view_y)
 
 class Attack:
     @staticmethod

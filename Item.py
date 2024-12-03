@@ -16,6 +16,10 @@ class Item:
             Item.image = load_image('items_sheet.png')
             Item.chest = load_wav('chestopen.wav')
             Item.crate = load_wav('crateopen.wav')
+            Item.getrope = load_wav('ropetoss.wav')
+            Item.getbomb = load_wav('webshot.wav')
+            Item.getgold = load_wav('gem1.wav')
+            Item.getgoldbar = load_wav('gem5.wav')
         self.x, self.y = x * 80, y * 80
         self.x_index, self.y_index = x_i, y_i
 
@@ -94,7 +98,6 @@ class Item:
 
     def handle_collision(self, group, other):
         if group == 'Player:Item':
-
             if self.take == 1:
                 Item.items_to_remove.append(self)
 
@@ -103,7 +106,7 @@ class Item:
                 (14, 15),  # Gold Bar
                 (15, 15),  # Gold Bars
             ]
-
+            Item.chest.play()
             item_type = choice(possible_items)
             Item.items_to_create.append((self.x // 80, (self.y + 41) // 80, *item_type))
             Item.items_to_remove.append(self)
@@ -115,6 +118,7 @@ class Item:
                 (0, 9),   # Rope
                 (6, 13),  # Spike Shoes
             ]
+            Item.crate.play()
             item_type = choice(possible_items)
             Item.items_to_create.append((self.x // 80, (self.y + 41) // 80, *item_type))
             Item.items_to_remove.append(self)
