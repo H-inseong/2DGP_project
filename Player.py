@@ -127,8 +127,8 @@ class Player:
         currenttop_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y + 30)
         currentdown_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y -33)
         side_tile_type = play_mode.map_obj.get_tile_type(self.x - 80, self.y)
-        downleft_tile_type = play_mode.map_obj.get_tile_type(self.x - 26, self.y - 35)
-        downright_tile_type = play_mode.map_obj.get_tile_type(self.x+ 26, self.y - 35)
+        downleft_tile_type = play_mode.map_obj.get_tile_type(self.x - 24, self.y - 40)
+        downright_tile_type = play_mode.map_obj.get_tile_type(self.x + 24, self.y - 40)
 
         if currenttop_tile_type not in ['ladder', 'rope', 'rope_head'] and currentdown_tile_type not in ['ladder', 'rope', 'rope_head']:
             self.ladder = False
@@ -146,6 +146,9 @@ class Player:
 
         if downleft_tile_type == 'empty' and downright_tile_type == 'empty':
                 self.state_machine.add_event(('floating', 0))
+
+        if downleft_tile_type in ['border', 'solid'] or downright_tile_type in ['border', 'solid']:
+                self.state_machine.add_event(('landed', 0))
 
         if self.left_pressed and not self.right_pressed:
             self.dirx = -1
@@ -791,6 +794,7 @@ class Dead:
 class Jump:
         @staticmethod
         def enter(player, e):
+            print(f'{e}')
             if not player.jumped and space_down(e):
                 player.velocity_y = 400  # 점프 초기 속도 (픽셀/초)
                 player.jumped = True
@@ -913,7 +917,6 @@ class Attack:
         player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time
         player.frame = (player.frame + 6 * ACTION_PER_TIME * game_framework.frame_time) % (player.maxframe + 1)
         player.whip.update(player.x, player.y, player.face_dir)
-
         if player.frame > 6:
             player.state_machine.add_event(('TIME_OUT', 0))
 

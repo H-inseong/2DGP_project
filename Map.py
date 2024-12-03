@@ -96,16 +96,6 @@ class Map:
             self.height = height
             self.image = load_image('background_main.png')
             self.tiles = {}
-            for x in range(width):
-                for y in range(height):
-                    tile_type = 'empty'
-                    if x < 3 or y < 3 or x >= width - 3 or y >= height - 3:
-                        tile_type = 'border'
-                    self.tiles[(x, y)] = Tile(tile_type, x, y)
-                    if self.tiles[(x,y)].tile_type == 'border':
-                        game_world.add_object(self.tiles[(x, y)], 1)
-                        continue
-                    game_world.add_object(self.tiles[(x, y)], 0)  # 타일을 깊이 0에 추가
 
     def draw(self, camera_x=0, camera_y=0):
         start_x = int(max(camera_x // 80, 0))
@@ -176,7 +166,7 @@ class Map:
                 if tile_type == 'item':
                     self.add_tile('empty', x, y)
                     Item(x, y, 2, 15)
-                elif tile_type == 'chest':
+                elif tile_type == 'crate':
                     self.add_tile('empty', x, y)
                     Item(x, y, 0, 15)
                 elif tile_type == 'snake':
