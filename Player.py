@@ -144,11 +144,12 @@ class Player:
         if self.hp < 1:
             self.state_machine.start(Dead)
 
-        if downleft_tile_type == 'empty' and downright_tile_type == 'empty':
-                self.state_machine.add_event(('floating', 0))
+        if self.ladder == False and self.jumped == False:
+            if downleft_tile_type == 'empty' and downright_tile_type == 'empty':
+                    self.state_machine.add_event(('floating', 0))
 
-        if downleft_tile_type in ['border', 'solid'] or downright_tile_type in ['border', 'solid']:
-                self.state_machine.add_event(('landed', 0))
+            if downleft_tile_type in ['border', 'solid'] or downright_tile_type in ['border', 'solid']:
+                    self.state_machine.add_event(('landed', 0))
 
         if self.left_pressed and not self.right_pressed:
             self.dirx = -1
@@ -230,7 +231,6 @@ class Player:
                     pass
 
         elif group == 'Player:Item':
-            print('아이템 충돌')
             match (other.name):
                 case('Gold Bar'):
                     self.gold += other.value

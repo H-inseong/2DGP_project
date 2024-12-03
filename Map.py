@@ -175,7 +175,7 @@ class Map:
                 elif tile_type == 'start':
                     self.add_tile('start', x, y)
                     play_mode.player.x = 80 * x + 70
-                    play_mode.player.y = 80 * y
+                    play_mode.player.y = 80 * y + 80
                 else:
                     self.add_tile(tile_type, x, y)
         game_world.add_collision_pair('Player:Map', play_mode.player, None)
