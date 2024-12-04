@@ -15,7 +15,7 @@ class Rope:
             Rope.image = load_image('rope.png')
             Rope.initsound = load_wav('ropetoss.wav')
             Rope.endsound = load_wav('ropecatch.wav')
-        self.x, self.y= x // 80 * 80, y // 80 * 80
+        self.x, self.y= x // 80 * 80 + 40, y // 80 * 80
         self. velocity = 1000
         self.frame = 0
         self.land = False
@@ -26,7 +26,7 @@ class Rope:
         game_world.add_collision_pair('Item:Map', self, None)
 
     def draw(self,vx, vy):
-        self.image.clip_draw_to_origin(128 * 10, 0, 128, 128, self.x - vx, self.y - vy ,80, 80)
+        self.image.clip_draw(128 * 10, 0, 128, 128, self.x - vx, self.y - vy ,80, 80)
         draw_rectangle(*self.get_bb())
 
     def update(self):
@@ -43,7 +43,7 @@ class Rope:
             game_world.remove_object(self)
 
     def get_bb(self):
-        return self.x - 10, self.y - 20, self.x + 10, self.y + 20
+        return self.x - 10, self.y , self.x + 10, self.y + 40
 
     def handle_collision(self, group, other):
         match(group):

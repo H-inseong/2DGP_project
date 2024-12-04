@@ -27,7 +27,7 @@ class Item:
             Item.getgoldbar = load_wav('gem5.wav')
             Item.getgoldbar.set_volume(64)
 
-        self.x, self.y = x * 80, y * 80
+        self.x, self.y = x * 80 + 40, y * 80
         self.x_index, self.y_index = x_i, y_i
 
         game_world.add_object(self)
@@ -75,14 +75,14 @@ class Item:
 
 
     def draw(self,camera_x, camera_y):
-        Item.image.clip_draw_to_origin(128 * self.x_index, 128 * self.y_index, 128, 128, self.x - camera_x, self.y - camera_y, 80, 80)
+        Item.image.clip_draw(128 * self.x_index, 128 * self.y_index, 128, 128, self.x - camera_x, self.y - camera_y, 80, 80)
         bb = self.get_bb()
         draw_rectangle(bb[0] - camera_x, bb[1] - camera_y, bb[2] - camera_x, bb[3] - camera_y)
 
     def update(self):
-        down_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y)
+        down_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y - 40)
         if down_tile_type in ['border', 'solid']:
-            pass
+            self.y += ((self.y - 41) // 80 * 80 + 70) - (self.y - 40)
         else:
             self.y += GRAVITY * game_framework.frame_time
 
@@ -99,9 +99,7 @@ class Item:
 
 
     def get_bb(self):
-        return self.x - 20, self.y, self.x + 100, self.y + 80
-
-
+        return self.x - 40, self.y - 40, self.x + 40, self.y + 40
 
     def handle_collision(self, group, other):
         if group == 'Player:Item':

@@ -24,7 +24,7 @@ def init():
 
     bgm.set_volume(32)
     bgm.repeat_play()
-    player.x, player.y = map_obj.get_tile_position('start')
+    player.x, player.y =  800, 800
 
 
 def finish():

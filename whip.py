@@ -38,7 +38,7 @@ class Whip:
                 Whip.image.clip_composite_draw(int(self.frame) * 128, 0, 128, 128, 0, 'h',
                                         self.x - 20 + (6 - int(self.frame)) * 15 - x, self.y - y, 60, 60)
         bb = self.get_bb()
-        draw_rectangle(bb[0] - x, bb[1] - y, bb[2] - x, bb[3] - y)
+        draw_rectangle(bb[0], bb[1], bb[2], bb[3])
 
     def update(self, x, y, dr):
         if self.active:
@@ -53,16 +53,28 @@ class Whip:
         if self.active:
             if self.direction == 1:
                 if int(self.frame) in [0, 1, 2]:
-                    return self.x - 20 - (6 - int(self.frame)) * 15, self.y + 50, self.x - 15, self.y + 15
+                    left = self.x - 20 - (6 - int(self.frame)) * 15
+                    bottom = self.y + 15
+                    right = self.x - 15
+                    top = self.y + 50
                 else:
-                    return self.x - 25, self.y - 10, self.x + 40, self.y + 20
-
+                    left = self.x - 25
+                    bottom = self.y - 10
+                    right = self.x + 40
+                    top = self.y + 20
             elif self.direction == -1:
                 if int(self.frame) in [0, 1, 2]:
-                    return self.x + 20 + (6 - int(self.frame)) * 15, self.y + 50, self.x + 15, self.y + 15
+                    left = self.x
+                    bottom = self.y + 15
+                    right = self.x + 160 - (6 - int(self.frame)) * 15
+                    top = self.y + 50
                 else:
-                    return self.x + 25, self.y - 10, self.x - 40, self.y + 20
-        return 0,0,0,0
+                    left = self.x - 40
+                    bottom = self.y - 10
+                    right = self.x + 25
+                    top = self.y + 20
+            return left, bottom, right, top
+        return 0, 0, 0, 0
 
     def activate(self):
         from Player import Player

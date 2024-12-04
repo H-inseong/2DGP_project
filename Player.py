@@ -917,7 +917,7 @@ class Attack:
         player.x += player.dirx * RUN_SPEED_PPS * game_framework.frame_time
         player.frame = (player.frame + 6 * ACTION_PER_TIME * game_framework.frame_time) % (player.maxframe + 1)
         player.whip.update(player.x, player.y, player.face_dir)
-        if player.frame > 6:
+        if player.frame > 6 :
             player.state_machine.add_event(('TIME_OUT', 0))
 
     @staticmethod
@@ -941,4 +941,4 @@ class Attack:
                                              80)
         player.whip.draw(player.view_x, player.view_y)
         if player.frame > 6:
-            player.state_machine.add_event(('TIME_OUT', 0))
+            player.state_machine.start(Run)
