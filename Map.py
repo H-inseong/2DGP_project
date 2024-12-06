@@ -7,7 +7,7 @@ from pico2d import *
 import game_world
 import play_mode
 from Item import Item
-from enemies import Snake
+from enemies import Snake, gSnake
 
 screen_width = 1920
 screen_height = 960
@@ -171,7 +171,8 @@ class Map:
                     Item(x, y, 0, 15)
                 elif tile_type == 'snake':
                     self.add_tile('empty', x, y)
-                    Snake(x, y, 0, 15)
+                    gSnake(x, y)
+                    Snake(x, y)
                 elif tile_type == 'start':
                     self.add_tile('start', x, y)
                     play_mode.player.x = 80 * x + 70

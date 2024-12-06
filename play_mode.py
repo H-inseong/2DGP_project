@@ -10,7 +10,7 @@ from enemies import Snake, Boss
 def init():
     global player, map_obj, camera_x, camera_y, select_tile, stage
     global bgm
-    stage = 1
+    stage = 0
     select_tile = 'solid'
 
     bgm = load_music('03. Menu.mp3')
@@ -19,12 +19,10 @@ def init():
     player = Player(0,0)
     map_obj.load_map(f"{stage}.csv")
 
-
     camera_x, camera_y = 0, 0
 
     bgm.set_volume(32)
     bgm.repeat_play()
-    player.x, player.y =  800, 800
 
 
 def finish():

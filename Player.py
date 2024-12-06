@@ -51,6 +51,7 @@ class Player:
             Player.spikehit = load_wav('spike_hit.wav')
             Player.damage = load_wav('heartbeat.wav')
             Player.dead = load_music('death.wav')
+            Player.top_coll = load_wav('spring.wav')
 
     def __init__(self, x, y):
 
@@ -276,11 +277,12 @@ class Player:
             self.take_damage(enemy)
 
         elif min_overlap == overlap_bottom:
-            enemy.take_damage(self.spishoes)
-            self.velocity_y = 100
+             self.take_damage(enemy)
 
-        if min_overlap == overlap_top:
-            self.take_damage(enemy)
+        elif min_overlap == overlap_top:
+            enemy.take_damage(self.spishoes)
+            Player.top_coll.play()
+            self.velocity_y = 200
 
 
     def resolve_collision(self, tile):
@@ -348,10 +350,10 @@ class Player:
 
     def take_damage(self, monster):
         self.hp -= 1
-        self.damage.set_volume(32)
+        self.damage.set_volume(64)
         self.damage.play()
         self.invincible = True
-        self.invincible_timer = 1.5
+        self.invincible_timer = 2
 
         if self.x < monster.x:
             self.x -= 30
@@ -362,8 +364,6 @@ class Player:
 
 def clamp(value, min_value, max_value):
     return max(min_value, min(value, max_value))
-
-
 
 
 

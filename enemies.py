@@ -7,17 +7,17 @@ from pico2d import *
 import play_mode
 from behavior_tree import BehaviorTree, Condition, Sequence, Action, Selector
 
-# zombie Run Speed
-PIXEL_PER_METER = (10.0 / 0.3)  # 10 pixel 30 cm
-RUN_SPEED_KMPH = 10.0  # Km / Hour
+PIXEL_PER_METER = (10.0 / 0.3)
+RUN_SPEED_KMPH = 10.0
 RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
 RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
 
-# zombie Action Speed
 TIME_PER_ACTION = 1
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 10.0
+
+GRAVITY = -500
 
 class Snake:
     image = None
@@ -25,41 +25,51 @@ class Snake:
     def load_images(self):
         if Snake.image == None:
             Snake.image = load_image('Snakes.png')
-    def __init__(self):
+
+    def __init__(self, x, y):
         game_world.add_object(self, 1)
         game_world.add_collision_pair('Player:Monster', None, self)
         game_world.add_collision_pair('Whip:Monster', None, self)
+        game_world.add_collision_pair('Monster:Map', self, None)
 
-        self.x, self.y = random.randint(1600-800, 1600), 240
+        self.land = False
+        self.x, self.y = x * 80 + 40, y * 80
         self.load_images()
         self.f_size = 80
         self.frame = 0
-        self.dir = random.choice([-1,1])
-        self.attack = False
-
+        self.dir = random.randint(-1, 1)
+        self.dir_timer = get_time()
 
     def update(self):
-        self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % FRAMES_PER_ACTION
-        self.x += RUN_SPEED_PPS * self.dir * game_framework.frame_time
+        self.frame = (self.frame + 12 * ACTION_PER_TIME * game_framework.frame_time) % 12
 
-        #Map 충돌체크 추가
-        if self.x > 1600:
-            self.dir = -1
-        elif self.x < 800:
-            self.dir = 1
-        self.x = clamp(800, self.x, 1600)
-        pass
+        self.x += RUN_SPEED_PPS * self.dir * game_framework.frame_time * 2
 
+        if get_time() - self.dir_timer > 3:
+            self.dir = random.choice([-1, 0, 1])  # 방향 무작위 선택
+            self.dir_timer = get_time()
+
+        down_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y - 35)
+        if down_tile_type == 'empty':
+            self.land = False
+
+        next_down_tile_type = play_mode.map_obj.get_tile_type(self.x + -self.dir * 21, self.y - 35)
+        if next_down_tile_type == 'empty':
+            self.dir = -self.dir
+        if not self.land:
+            self.y += GRAVITY * game_framework.frame_time
 
     def draw(self, x, y):
         if self.dir < 0:
-            Snake.image.clip_composite_draw(int(self.frame) * self.f_size, self.f_size * self.f_size + 28,
+            Snake.image.clip_composite_draw(int(self.frame) * self.f_size, self.f_size + 28,
                                             self.f_size, self.f_size, 0, 'h',
-                                            self.x - x + 40, self.y - y + 40, 80, 80)
+                                            self.x - x, self.y - y, 60, 60)
         else:
-            Snake.image.clip_draw_to_origin(int(self.frame) * self.f_size, self.f_size + 28,
+            Snake.image.clip_draw(int(self.frame) * self.f_size, self.f_size + 28,
                                             self.f_size, self.f_size,
-                                            self.x - x, self.y - y , 80, 80)
+                                            self.x - x, self.y - y, 60, 60)
+        bb = self.get_bb()
+        draw_rectangle(bb[0] - x, bb[1] - y, bb[2] - x, bb[3] - y)
 
     def handle_event(self, event):
         pass
@@ -67,10 +77,139 @@ class Snake:
     def handle_collision(self, group, other):
         if group == 'Whip:Monster':
             game_world.remove_object(self)
+            play_mode.player.spikehit.play()
 
+        if group == 'Monster:Map':
+            if other.tile_type in ['solid', 'border']:
+                    self.resolve_collision(other)
 
     def get_bb(self):
-        return self.x - self.f_size/3 , self.y - self.f_size/2 , self.x + self.f_size/3 , self.y + self.f_size/3
+        return self.x - 20 , self.y - 30 , self.x + 20 , self.y + 20
+
+    def resolve_collision(self, tile):
+        monster_bb = self.get_bb()
+        tile_bb = tile.get_bb()
+
+        overlap_left = monster_bb[2] - tile_bb[0]
+        overlap_right = tile_bb[2] - monster_bb[0]
+        overlap_bottom = monster_bb[3] - tile_bb[1]
+        overlap_top = tile_bb[3] - monster_bb[1]
+
+        min_overlap = min(overlap_left, overlap_right, overlap_bottom, overlap_top)
+
+        if min_overlap == overlap_left:
+            self.x -= overlap_left
+
+        elif min_overlap == overlap_right:
+            self.x += overlap_right
+
+        elif min_overlap == overlap_bottom:
+            self.y -= overlap_bottom
+            self.land = True
+            self.dir_timer = get_time()
+
+        elif min_overlap == overlap_top:
+            self.y += overlap_top
+
+    def take_damage(self, x):
+        game_world.remove_object(self)
+
+class gSnake:
+    image = None
+
+    def load_images(self):
+        if gSnake.image == None:
+            gSnake.image = load_image('Snakes.png')
+
+    def __init__(self, x, y):
+        game_world.add_object(self, 1)
+        game_world.add_collision_pair('Player:Monster', None, self)
+        game_world.add_collision_pair('Whip:Monster', None, self)
+        game_world.add_collision_pair('Monster:Map', self, None)
+
+        self.land = False
+        self.x, self.y = x * 80 + 40, y * 80
+        self.load_images()
+        self.f_size = 80
+        self.frame = 0
+        self.dir = random.randint(-1, 1)
+        self.dir_timer = get_time()
+
+    def update(self):
+        self.frame = (self.frame + 12 * ACTION_PER_TIME * game_framework.frame_time) % 12
+
+        self.x += RUN_SPEED_PPS * self.dir * game_framework.frame_time * 2
+
+        if get_time() - self.dir_timer > 1:
+            self.dir = random.choice([-1, 0, 1])  # 방향 무작위 선택
+            self.dir_timer = get_time()
+
+        down_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y - 25)
+        if down_tile_type == 'empty':
+            self.land = False
+
+        next_down_tile_type = play_mode.map_obj.get_tile_type(self.x + -self.dir * 21, self.y - 25)
+        if next_down_tile_type == 'empty':
+            self.dir = -self.dir
+        if not self.land:
+            self.y += GRAVITY * game_framework.frame_time
+
+    def draw(self, x, y):
+        if self.dir < 0:
+            gSnake.image.clip_composite_draw(int(self.frame) * self.f_size, self.f_size*3 + 28,
+                                            self.f_size, self.f_size, 0, 'h',
+                                            self.x - x, self.y - y, 60, 60)
+        else:
+            gSnake.image.clip_draw(int(self.frame) * self.f_size, self.f_size*3 + 28,
+                                            self.f_size, self.f_size,
+                                            self.x - x, self.y - y, 60, 60)
+        bb = self.get_bb()
+        draw_rectangle(bb[0] - x, bb[1] - y, bb[2] - x, bb[3] - y)
+
+    def handle_event(self, event):
+        pass
+
+    def handle_collision(self, group, other):
+        if group == 'Whip:Monster':
+            game_world.remove_object(self)
+            play_mode.player.spikehit.play()
+
+        if group == 'Monster:Map':
+            if other.tile_type in ['solid', 'border']:
+                    self.resolve_collision(other)
+
+    def get_bb(self):
+        return self.x - 20 , self.y - 20 , self.x + 20 , self.y + 20
+
+    def resolve_collision(self, tile):
+        monster_bb = self.get_bb()
+        tile_bb = tile.get_bb()
+
+        overlap_left = monster_bb[2] - tile_bb[0]
+        overlap_right = tile_bb[2] - monster_bb[0]
+        overlap_bottom = monster_bb[3] - tile_bb[1]
+        overlap_top = tile_bb[3] - monster_bb[1]
+
+        min_overlap = min(overlap_left, overlap_right, overlap_bottom, overlap_top)
+
+        if min_overlap == overlap_left:
+            self.x -= overlap_left
+
+        elif min_overlap == overlap_right:
+            self.x += overlap_right
+
+        elif min_overlap == overlap_bottom:
+            self.y -= overlap_bottom
+            self.land = True
+            self.dir_timer = get_time()
+
+        elif min_overlap == overlap_top:
+            self.y += overlap_top
+
+    def take_damage(self, x):
+        game_world.remove_object(self)
+
+
 
 class Boss:
     image = None
@@ -83,6 +222,10 @@ class Boss:
 
         if Boss.image is None:
             Boss.image = load_image('boss.png')
+            Boss.tong = load_wav('tank.wav')
+            Boss.dead = load_wav('')
+            Boss.skr = load_wav('')
+            Boss.skrr = load_wav('')
 
         self.x, self.y = x * 80, y * 80
         self.frame = 0
@@ -103,6 +246,11 @@ class Boss:
             self.invincible_timer -= game_framework.frame_time
             if self.invincible_timer <= 0:
                 self.invincible = False
+
+        if self.hp <= 0:
+            self.drop_items()
+            game_world.remove_object(self)
+
         self.frame = (self.frame + self.maxframe * game_framework.frame_time) % self.maxframe
         self.bt.run()
 
@@ -173,11 +321,10 @@ class Boss:
             if self.hp <= 0:
                 game_world.remove_object(self)
         if group == 'Monster:Map':
-            if isinstance(other, Tile):
-                if other.tile_type == 'empty':
-                    self.land = False
-                if other.tile_type in ['solid', 'border']:
-                    self.resolve_collision(other)
+            if other.tile_type == 'empty':
+                self.land = False
+            if other.tile_type in ['solid', 'border']:
+                self.resolve_collision(other)
 
     def drop_items(self):
         # 아이템 드롭 로직
