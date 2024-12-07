@@ -1,13 +1,12 @@
 from random import randint
-from sys import platlibdir
-from turtledemo.penrose import start
+
 
 from pico2d import *
 
 import game_world
 import play_mode
 from Item import Item
-from enemies import Snake, gSnake
+from enemies import Snake, gSnake, Boss
 
 screen_width = 1920
 screen_height = 960
@@ -173,6 +172,9 @@ class Map:
                     self.add_tile('empty', x, y)
                     gSnake(x, y)
                     Snake(x, y)
+                elif tile_type == 'boss':
+                    self.add_tile('empty', x, y)
+                    Boss(x,y)
                 elif tile_type == 'start':
                     self.add_tile('start', x, y)
                     play_mode.player.x = 80 * x + 70
@@ -184,8 +186,6 @@ class Map:
         game_world.add_collision_pair('Player:Monster', play_mode.player, None)
         game_world.add_collision_pair('Whip:Monster', play_mode.player.whip, None)
         game_world.add_collision_pair('Whip:Item', play_mode.player.whip, None)
-
-        print(f"Map loaded from {filename}")
 
     def get_tile_type(self, x, y):
         tile_x, tile_y = int(x // 80), int(y // 80)

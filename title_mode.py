@@ -10,7 +10,7 @@ import play_mode
 def init():
     global image, bgm
     bgm = pico2d.load_music('01. Dwelling.mp3')
-    bgm.set_volume(64)
+    bgm.set_volume(48)
     bgm.play()
     image = load_image('title.png')
 

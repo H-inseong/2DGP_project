@@ -15,17 +15,17 @@ class Item:
         if Item.image == None:
             Item.image = load_image('items_sheet.png')
             Item.chest = load_wav('chestopen.wav')
-            Item.chest.set_volume(64)
+            Item.chest.set_volume(48)
             Item.crate = load_wav('crateopen.wav')
-            Item.crate.set_volume(64)
+            Item.crate.set_volume(48)
             Item.getrope = load_wav('ropetoss.wav')
             Item.getrope.set_volume(64)
             Item.getbomb = load_wav('webshot.wav')
             Item.getbomb.set_volume(64)
             Item.getgold = load_wav('gem1.wav')
-            Item.getgold.set_volume(64)
+            Item.getgold.set_volume(48)
             Item.getgoldbar = load_wav('gem5.wav')
-            Item.getgoldbar.set_volume(64)
+            Item.getgoldbar.set_volume(48)
 
         self.x, self.y = x * 80 + 40, y * 80
         self.x_index, self.y_index = x_i, y_i

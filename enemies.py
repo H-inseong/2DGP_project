@@ -5,6 +5,7 @@ import game_world
 from pico2d import *
 
 import play_mode
+from Item import Item
 from behavior_tree import BehaviorTree, Condition, Sequence, Action, Selector
 
 PIXEL_PER_METER = (10.0 / 0.3)
@@ -223,9 +224,9 @@ class Boss:
         if Boss.image is None:
             Boss.image = load_image('boss.png')
             Boss.tong = load_wav('tank.wav')
-            Boss.dead = load_wav('')
+            """Boss.dead = load_wav('')
             Boss.skr = load_wav('')
-            Boss.skrr = load_wav('')
+            Boss.skrr = load_wav('')"""
 
         self.x, self.y = x * 80, y * 80
         self.frame = 0
@@ -247,12 +248,19 @@ class Boss:
             if self.invincible_timer <= 0:
                 self.invincible = False
 
-        if self.hp <= 0:
-            self.drop_items()
-            game_world.remove_object(self)
+        down_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y - 80)
+        if down_tile_type == 'empty':
+            self.y += GRAVITY * game_framework.frame_time
+        else:
+
+            pass
 
         self.frame = (self.frame + self.maxframe * game_framework.frame_time) % self.maxframe
         self.bt.run()
+
+        if self.hp <= 0:
+            self.drop_items()
+            game_world.remove_object(self)
 
     def draw(self, camera_x, camera_y):
         screen_x, screen_y = self.x - camera_x, self.y - camera_y
@@ -324,10 +332,11 @@ class Boss:
             if other.tile_type == 'empty':
                 self.land = False
             if other.tile_type in ['solid', 'border']:
-                self.resolve_collision(other)
+                #self.resolve_collision(other)
+                pass
 
     def drop_items(self):
-        # 아이템 드롭 로직
+        Item(self.x // 80, self.y // 80, 0, 13)
         pass
 
     def get_bb(self):

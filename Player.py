@@ -69,18 +69,21 @@ class Player:
                 Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run,
                        space_down: Jump, down_down: Crouch,  up_down: Idle, up_up: Idle,
                        z_down: Attack, x_down: Idle, c_down: Idle, floating: Jump},
+
                 Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle,
                       space_down: Jump, down_down: CrouchMove, z_down: Attack, x_down: Run, c_down:Run, floating: Jump},
 
                 Crouch: {down_up: Idle, left_down: CrouchMove, right_down:CrouchMove, down_down: Crouch, z_down: Attack, space_down: Jump, x_down:Crouch, c_down:Crouch, floating: Jump},
                 CrouchMove : {left_up: Crouch, right_up:Crouch, left_down: Crouch, right_down:Crouch, down_up: Run, space_down: Jump, x_down:CrouchMove, c_down:CrouchMove, floating: Jump},
+
                 Climb: {up_up: ClimbMove, up_down: ClimbMove, down_up: ClimbMove, down_down: ClimbMove, z_down: Idle, x_down:Climb,c_down:Climb, space_down: Jump, floating: Jump},
                 ClimbMove: {up_up: Climb, up_down: ClimbMove, down_up:Climb, down_down: ClimbMove, x_down:Climb ,c_down:Climb, space_down: Jump, floating: Jump},
 
-                Stunned: { time_out: Idle },
                 Attack: { right_up: Attack, left_up: Attack, right_down: Attack, left_down: Attack, space_down: Jump, time_out: Run, c_down:Attack},
                 Jump: { right_down: Jump, left_down: Jump , landed: Run, z_down: Jump, x_down:Jump, c_down:Jump, up_down: ClimbMove},
-                Dead: { time_out: Dead }
+
+                Stunned: { time_out: Idle },
+                Dead: { time_out: Dead },
             }
         )
         #f = frame
@@ -126,7 +129,7 @@ class Player:
                 self.invincible = False
 
         currenttop_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y + 30)
-        currentdown_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y -33)
+        currentdown_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y - 33)
         side_tile_type = play_mode.map_obj.get_tile_type(self.x - 80, self.y)
         downleft_tile_type = play_mode.map_obj.get_tile_type(self.x - 24, self.y - 40)
         downright_tile_type = play_mode.map_obj.get_tile_type(self.x + 24, self.y - 40)
@@ -145,7 +148,7 @@ class Player:
         if self.hp < 1:
             self.state_machine.start(Dead)
 
-        if self.ladder == False and self.jumped == False:
+        if self.state_machine.cur_state not in [ Climb, ClimbMove]:
             if downleft_tile_type == 'empty' and downright_tile_type == 'empty':
                     self.state_machine.add_event(('floating', 0))
 

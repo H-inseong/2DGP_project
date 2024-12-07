@@ -10,7 +10,7 @@ from enemies import Snake, Boss
 def init():
     global player, map_obj, camera_x, camera_y, select_tile, stage
     global bgm
-    stage = 0
+    stage = 3
     select_tile = 'solid'
 
     bgm = load_music('03. Menu.mp3')
