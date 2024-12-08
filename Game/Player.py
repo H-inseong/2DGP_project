@@ -114,6 +114,7 @@ class Player:
         self.rope_count = 4
         self.gold = 0
 
+        self.dd = False
         self.aa = False
         self.ladder = False
         self.jumped = False
@@ -702,12 +703,12 @@ class Stunned:
     def do(player):
         player.frame = (player.frame + 12 * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
 
-        if get_time() - player.st_time > 1:
+        if get_time() - player.st_time > 3:
             player.state_machine.add_event(('TIME_OUT', 0))
 
     @staticmethod
     def draw(player):
-        if get_time() - player.st_time > 1:
+        if get_time() - player.st_time > 3:
             player.state_machine.add_event(('TIME_OUT', 0))
         if player.face_dir == 1:
             if player.dx > 0:
@@ -780,7 +781,8 @@ class Dead:
         player.frame = 0
         player.maxframe = 12
 
-        if player.st_time is None:
+        if player.dd == False:
+            player.dd = True
             Player.dead.play()
             player.st_time = get_time()
 
