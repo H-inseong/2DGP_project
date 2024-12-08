@@ -69,8 +69,6 @@ class Snake:
             Snake.image.clip_draw(int(self.frame) * self.f_size, self.f_size + 28,
                                             self.f_size, self.f_size,
                                             self.x - x, self.y - y, 60, 60)
-        bb = self.get_bb()
-        draw_rectangle(bb[0] - x, bb[1] - y, bb[2] - x, bb[3] - y)
 
     def handle_event(self, event):
         pass
@@ -164,8 +162,6 @@ class gSnake:
             gSnake.image.clip_draw(int(self.frame) * self.f_size, self.f_size*3 + 28,
                                             self.f_size, self.f_size,
                                             self.x - x, self.y - y, 60, 60)
-        bb = self.get_bb()
-        draw_rectangle(bb[0] - x, bb[1] - y, bb[2] - x, bb[3] - y)
 
     def handle_event(self, event):
         pass
@@ -281,8 +277,6 @@ class Boss:
             self.image.clip_draw(int(self.frame) * 128, 128 * self.action, 128, 128, screen_x, screen_y, 160, 160)
         else:
             self.image.clip_composite_draw(int(self.frame) * 128, 128 * self.action, 128, 128, 0, 'h', screen_x, screen_y, 160, 160)
-        bb = self.get_bb()
-        draw_rectangle(bb[0] - camera_x, bb[1] - camera_y, bb[2] - camera_x, bb[3] - camera_y)
 
     def build_behavior_tree(self):
         die = Condition('체력이 0인가?', self.is_dead)

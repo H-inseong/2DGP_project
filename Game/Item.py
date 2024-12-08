@@ -76,8 +76,6 @@ class Item:
 
     def draw(self,camera_x, camera_y):
         Item.image.clip_draw(128 * self.x_index, 128 * self.y_index, 128, 128, self.x - camera_x, self.y - camera_y, 80, 80)
-        bb = self.get_bb()
-        draw_rectangle(bb[0] - camera_x, bb[1] - camera_y, bb[2] - camera_x, bb[3] - camera_y)
 
     def update(self):
         down_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y - 40)

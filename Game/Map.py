@@ -170,10 +170,12 @@ class Map:
                 elif tile_type == 'crate':
                     self.add_tile('empty', x, y)
                     Item(x, y, 0, 15)
-                elif tile_type == 'snake':
+                elif tile_type == 's':
+                    self.add_tile('empty', x, y)
+                    Snake(x, y)
+                elif tile_type == 'gs':
                     self.add_tile('empty', x, y)
                     gSnake(x, y)
-                    Snake(x, y)
                 elif tile_type == 'boss':
                     self.add_tile('empty', x, y)
                     Boss(x,y)

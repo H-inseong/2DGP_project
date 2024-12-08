@@ -1,12 +1,7 @@
-from tkinter.constants import SEL_FIRST
-
 from pico2d import *
-from pygame.draw_py import draw_pixel
-
 import game_world
 import game_framework
 import play_mode
-from state_machine import landed
 
 TIME_PER_ACTION = 2
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION

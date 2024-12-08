@@ -2,7 +2,6 @@ from pico2d import *
 import game_world
 import game_framework
 import play_mode
-from state_machine import landed
 
 TIME_PER_ACTION = 1
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
@@ -27,7 +26,6 @@ class Rope:
 
     def draw(self,vx, vy):
         self.image.clip_draw(128 * 10, 0, 128, 128, self.x - vx, self.y - vy ,80, 80)
-        draw_rectangle(*self.get_bb())
 
     def update(self):
         global map_obj

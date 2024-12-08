@@ -5,22 +5,15 @@ import game_world
 from Item import Item
 from Map import Map, Tile
 from Player import Player
-from enemies import Snake, Boss
 
 def init():
-    global player, map_obj, camera_x, camera_y, select_tile, stage
-    global bgm
-    stage = 2
-    select_tile = 'solid'
-
+    global player, map_obj, camera_x, camera_y, stage, bgm
+    stage = 0
     bgm = load_music('03. Menu.mp3')
-
     map_obj = Map(46, 38)
     player = Player(0,0)
     map_obj.load_map(f"{stage}.csv")
-
     camera_x, camera_y = 0, 0
-
     bgm.set_volume(32)
     bgm.repeat_play()
 
@@ -41,19 +34,6 @@ def handle_events():
             if event.key == pico2d.SDLK_ESCAPE:
                 game_framework.quit()
 
-            elif event.key == pico2d.SDLK_o:
-                map_obj.save_map("current_map.csv")
-            elif event.key == pico2d.SDLK_p:
-                map_obj.load_map("current_map.csv")
-
-
-            elif event.key == pico2d.SDLK_1:
-                select_tile = 'solid'
-            elif event.key == pico2d.SDLK_2:
-                select_tile = 'ladder'
-            elif event.key == pico2d.SDLK_3:
-                select_tile = 'spike'
-
             elif event.key == pico2d.SDLK_UP:
                 if player.move_stage:
                     player.intodoor_sound.set_volume(32)
@@ -64,20 +44,6 @@ def handle_events():
                 player.handle_event(event)
             else:
                 player.handle_event(event)
-
-        elif event.type == pico2d.SDL_MOUSEBUTTONDOWN:
-             mouse_x, mouse_y = event.x, 960 - event.y
-
-             world_x = camera_x + mouse_x
-             world_y = camera_y + mouse_y
-
-             tile_x = world_x // 80
-             tile_y = world_y // 80
-
-             if event.button == 1:
-                 set_solid_tile(tile_x, tile_y, select_tile)
-             elif event.button == 3:
-                 Item(tile_x, tile_y, 2, 15)
         else:
             player.handle_event(event)
 

@@ -1,7 +1,4 @@
-from sys import platlibdir
-
 from pico2d import *
-from pygame.examples.chimp import load_sound
 
 import UI
 import game_framework
@@ -183,9 +180,6 @@ class Player:
     def draw(self, a,b):
         self.state_machine.draw()
         self.ui.draw(self.hp, self.bomb_count, self.rope_count, self.gold)
-        if DEBUG:
-            bb = self.get_bb()
-            draw_rectangle(bb[0] - self.view_x, bb[1] - self.view_y, bb[2] - self.view_x, bb[3] - self.view_y)
 
     def handle_event(self, event):
         if event.type == SDL_KEYDOWN:

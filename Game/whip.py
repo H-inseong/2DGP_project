@@ -37,8 +37,6 @@ class Whip:
             else:
                 Whip.image.clip_composite_draw(int(self.frame) * 128, 0, 128, 128, 0, 'h',
                                         self.x - 20 + (6 - int(self.frame)) * 15 - x, self.y - y, 60, 60)
-        bb = self.get_bb()
-        draw_rectangle(bb[0], bb[1], bb[2], bb[3])
 
     def update(self, x, y, dr):
         if self.active:
