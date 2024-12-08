@@ -10,7 +10,7 @@ from enemies import Snake, Boss
 def init():
     global player, map_obj, camera_x, camera_y, select_tile, stage
     global bgm
-    stage = 3
+    stage = 2
     select_tile = 'solid'
 
     bgm = load_music('03. Menu.mp3')
@@ -154,14 +154,15 @@ def load_next_stage(stg):
     map_obj.load_map(f"{stg}.csv")
     game_world.add_object(player, 1)
     if stg == 2:
-        bgm = load_music('06. Old timer.mp3')
-        bgm.set_volume(32)
-        bgm.repeat_play()
-    else:
+        pass
+    elif stg == 3:
         bgm = load_music('08. Hidden dangers.mp3')
         bgm.set_volume(32)
         bgm.repeat_play()
-
+    elif stg == 4:
+        bgm = load_music('01. Dwelling.mp3')
+        bgm.set_volume(32)
+        bgm.repeat_play()
 
 def item_create(x, y, x_i, y_i):
     Item(x, y, x_i, y_i)

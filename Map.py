@@ -20,6 +20,8 @@ class Tile:
             Tile.ex_sheet = load_image('background_extrashape.png')
             Tile.wood_sheet = load_image('background_woods.png')
             Tile.rope_sheet = load_image('rope.png')
+            Tile.bkb = load_wav('crushblock.wav')
+            Tile.bkb.set_volume(64)
         if tile_type in 'solid':
             self.solid_num = randint(1,3)
         self.tile_type = tile_type
@@ -198,3 +200,17 @@ class Map:
             if tile.tile_type == tile_type:
                 return x * 80 + 40, y * 80 + 40  # 타일의 중심 좌표
         return None
+
+    def get_tile_coords(self, cx, cy):
+        tile_x = int(cx // 80)
+        tile_y = int(cy // 80)
+        return tile_x, tile_y
+
+    def break_tile(self, tile_x, tile_y):
+        if (tile_x, tile_y) in self.tiles:
+            current_tile = self.tiles[(tile_x, tile_y)]
+            if current_tile is not None:
+                game_world.remove_object(current_tile)
+            self.tiles[(tile_x, tile_y)] = None
+            self.add_tile('empty', tile_x, tile_y)
+            Tile.bkb.play()

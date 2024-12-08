@@ -32,7 +32,7 @@ class Snake:
         game_world.add_collision_pair('Player:Monster', None, self)
         game_world.add_collision_pair('Whip:Monster', None, self)
         game_world.add_collision_pair('Monster:Map', self, None)
-
+        self.rolling = False
         self.land = False
         self.x, self.y = x * 80 + 40, y * 80
         self.load_images()
@@ -127,7 +127,7 @@ class gSnake:
         game_world.add_collision_pair('Player:Monster', None, self)
         game_world.add_collision_pair('Whip:Monster', None, self)
         game_world.add_collision_pair('Monster:Map', self, None)
-
+        self.rolling = False
         self.land = False
         self.x, self.y = x * 80 + 40, y * 80
         self.load_images()
@@ -224,12 +224,17 @@ class Boss:
         if Boss.image is None:
             Boss.image = load_image('boss.png')
             Boss.tong = load_wav('tank.wav')
-            """Boss.dead = load_wav('')
-            Boss.skr = load_wav('')
-            Boss.skrr = load_wav('')"""
+            Boss.dead = load_wav('grunt01.wav')
+            Boss.skr = load_wav('grunt03.wav')
+            Boss.skrr = load_wav('hit.wav')
+            Boss.tong.set_volume(64)
+            Boss.dead.set_volume(64)
+            Boss.skr.set_volume(64)
+            Boss.skrr.set_volume(64)
 
-        self.x, self.y = x * 80, y * 80
+        self.x, self.y = x * 80, y * 80 + 80  # y 위치 조정
         self.frame = 0
+        self.f_size = 160
         self.maxframe = 9
         self.action = 15
         self.direction = -1  # -1: 왼쪽, 1: 오른쪽
@@ -239,8 +244,17 @@ class Boss:
         self.roll_timer = 0
         self.recover_timer = 0
         self.build_behavior_tree()
-        self.invincible = False  # 무적 상태 여부
-        self.invincible_timer = 0  # 무적 상태 지속 시간
+        self.invincible = False
+        self.invincible_timer = 0
+
+        self.direction_locked = False
+        self.attacking = False
+        self.jumping = False
+        self.rolling = False
+        self.waiting = False
+        self.wait_timer = 0
+
+        self.dir_timer = get_time()
 
     def update(self):
         if self.invincible:
@@ -252,7 +266,6 @@ class Boss:
         if down_tile_type == 'empty':
             self.y += GRAVITY * game_framework.frame_time
         else:
-
             pass
 
         self.frame = (self.frame + self.maxframe * game_framework.frame_time) % self.maxframe
@@ -264,80 +277,179 @@ class Boss:
 
     def draw(self, camera_x, camera_y):
         screen_x, screen_y = self.x - camera_x, self.y - camera_y
-        if self.direction == 1:  # 오른쪽
-            self.image.clip_draw_to_origin(int(self.frame) * 128, 128 * self.action, 128, 128, screen_x, screen_y, 160, 160)
-        else:  # 왼쪽
-            self.image.clip_composite_draw(int(self.frame) * 128, 128 * self.action, 128, 128, 0, 'h', screen_x + 80, screen_y + 80, 160, 160)
+        if self.direction == 1:
+            self.image.clip_draw(int(self.frame) * 128, 128 * self.action, 128, 128, screen_x, screen_y, 160, 160)
+        else:
+            self.image.clip_composite_draw(int(self.frame) * 128, 128 * self.action, 128, 128, 0, 'h', screen_x, screen_y, 160, 160)
+        bb = self.get_bb()
+        draw_rectangle(bb[0] - camera_x, bb[1] - camera_y, bb[2] - camera_x, bb[3] - camera_y)
 
     def build_behavior_tree(self):
         die = Condition('체력이 0인가?', self.is_dead)
-        recover = Condition('회복 중인가?', self.is_recovering)
-        attack = Sequence('플레이어 공격', Condition('플레이어가 가까운가?', self.is_player_nearby), Action('공격', self.attack_player))
-        chase = Sequence('플레이어 추격', Condition('플레이어가 범위 내에 있는가?', self.is_player_in_range), Action('돌진', self.chase_player))
-        idle = Action('Idle 상태 유지', self.idle_behavior)
+        detect_player_or_attacking = Condition('플레이어가 4칸 이내에 있거나 공격 중인가?', self.is_player_within_4_tiles_or_attacking)
+        jump_attack = Action('점프 공격', self.do_jump_attack)
+        roll_attack = Action('구르기', self.do_roll)
+        wait_after_roll = Action('롤 후 대기', self.do_wait_after_roll)
+        idle = Action('배회', self.idle_behavior)
 
-        root = Selector('Quillback 행동 선택', die, recover, attack, chase, idle)
+        attack_sequence = Sequence('공격 시퀀스', detect_player_or_attacking, jump_attack, roll_attack, wait_after_roll)
+
+
+        root = Selector('Quillback 행동 선택', die, attack_sequence, idle)
         self.bt = BehaviorTree(root)
 
-    # ---- 상태 확인 ----
+
+
     def is_dead(self):
         return BehaviorTree.SUCCESS if self.hp <= 0 else BehaviorTree.FAIL
 
-    def is_recovering(self):
-        if self.recover_timer > 0:
-            self.recover_timer -= game_framework.frame_time
+    def is_player_within_4_tiles_or_attacking(self):
+        if self.attacking:
+            return BehaviorTree.SUCCESS
+        return self.is_player_within_4_tiles()
+
+    def is_player_within_4_tiles(self):
+        dx, dy = self.x - play_mode.player.x, self.y - play_mode.player.y
+        distance = (dx**2 + dy**2)**0.5
+        if distance < 320:
             return BehaviorTree.SUCCESS
         return BehaviorTree.FAIL
 
-    def is_player_nearby(self, distance=50):
-        global player
-        dx, dy = self.x - play_mode.player.x, self.y - play_mode.player.y
-        return BehaviorTree.SUCCESS if (dx**2 + dy**2) < (distance**2) else BehaviorTree.FAIL
 
-    def is_player_in_range(self, range_distance=400):
-        dx, dy = self.x - play_mode.player.x, self.y - play_mode.player.y
-        return BehaviorTree.SUCCESS if (dx**2 + dy**2) < (range_distance**2) else BehaviorTree.FAIL
 
-    # ---- 행동 ----
+
     def idle_behavior(self):
-        self.x += self.speed * self.direction * game_framework.frame_time
-        if self.x < 800 or self.x > 1600:  # 벽에 닿으면 방향 전환
-            self.direction *= -1
-        return BehaviorTree.RUNNING
-
-    def chase_player(self):
-        self.roll_timer += game_framework.frame_time
+        self.action = 15
         self.maxframe = 9
-        self.action = 9
-        self.x += self.roll_speed * self.direction * game_framework.frame_time
-        if abs(play_mode.player.x - self.x) < 50:  # 플레이어 근처에 도달
-            self.recover_timer = 2  # 2초 동안 회복 상태
-            return BehaviorTree.SUCCESS
-        elif self.roll_timer > 2:  # 일정 시간 후 멈춤
-            self.roll_timer = 0
-            return BehaviorTree.FAIL
+        self.attacking = False
+        self.jumping = False
+        self.rolling = False
+        self.waiting = False
+        self.direction_locked = False
+
+        if get_time() - self.dir_timer > 3:
+            self.direction = random.choice([-1, 0, 1])
+            self.dir_timer = get_time()
+
+        if self.direction != 0:
+            front_x = self.x + self.direction * 80
+            front_y = self.y
+            tile_x, tile_y = play_mode.map_obj.get_tile_coords(front_x, front_y)
+            tile_type = play_mode.map_obj.get_tile_type(front_x, front_y)
+
+            if not play_mode.map_obj.is_passable(tile_x, tile_y):
+                self.direction = -self.direction
+
+        self.x += self.speed * self.direction * game_framework.frame_time
         return BehaviorTree.RUNNING
 
-    def attack_player(self):
-        self.frame = (self.frame + FRAMES_PER_ACTION * game_framework.frame_time) % FRAMES_PER_ACTION
-        # 점프 공격 구현
-        return BehaviorTree.SUCCESS
+    def do_jump_attack(self):
+        if not self.direction_locked:
+            self.direction = 1 if play_mode.player.x > self.x else -1
+            self.direction_locked = True
+            self.attacking = True
+
+        self.jumping = True
+        self.attacking = True
+        self.action = 10
+        self.maxframe = 9
+
+        if not hasattr(self, 'jump_timer'):
+            self.jump_timer = 0
+        self.jump_timer += game_framework.frame_time
+
+        self.break_front_tiles()
+
+        if self.jump_timer > 0.5:
+            self.jumping = False
+            self.jump_timer = 0
+            return BehaviorTree.SUCCESS
+
+        return BehaviorTree.RUNNING
+
+    def do_roll(self):
+        if not self.rolling:
+            self.rolling = True
+            self.action = 9
+            self.maxframe = 9
+
+        result = self.roll_forward_and_break()
+        if result == 'border_hit':
+            self.rolling = False
+            self.attacking = False  # 공격 상태 해제
+            return BehaviorTree.SUCCESS
+
+        return BehaviorTree.RUNNING
+
+    def do_wait_after_roll(self):
+        if not self.waiting:
+            self.waiting = True
+            self.wait_timer = 5.0
+            self.action = 15  # 대기 애니메이션
+
+        self.wait_timer -= game_framework.frame_time
+        if self.wait_timer <= 0:
+            self.waiting = False
+            return BehaviorTree.SUCCESS
+
+        return BehaviorTree.RUNNING
+
+    # ---- 부가 함수들 ----
+    def break_front_tiles(self):
+        front_check_distance = 80
+        vertical_offsets = [0, 120]  # 점프 중 파괴할 타일의 y 오프셋
+
+        for v_off in vertical_offsets:
+            cx = self.x + self.direction * front_check_distance
+            cy = self.y + v_off
+            t_type = play_mode.map_obj.get_tile_type(cx, cy)
+
+            # border 블럭은 파괴하지 않음
+            if t_type == 'solid':
+                tx, ty = play_mode.map_obj.get_tile_coords(cx, cy)
+                play_mode.map_obj.break_tile(tx, ty)
+            # border인 경우 파괴하지 않고 롤 중단 조건 없음
+
+    def roll_forward_and_break(self):
+        front_check_distance = 80
+        vertical_offsets = [80, 0]  # 롤 중 파괴할 타일의 y 오프셋
+        border_encountered = False
+
+        for v_off in vertical_offsets:
+            cx = self.x + self.direction * front_check_distance
+            cy = self.y + v_off
+            t_type = play_mode.map_obj.get_tile_type(cx, cy)
+
+            if t_type == 'solid':
+                tx, ty = play_mode.map_obj.get_tile_coords(cx, cy)
+                play_mode.map_obj.break_tile(tx, ty)
+            elif t_type == 'border':
+                border_encountered = True
+
+        self.x += self.roll_speed * self.direction * game_framework.frame_time
+
+        if border_encountered:
+            return 'border_hit'
+        return 'continue'
 
     def handle_collision(self, group, other):
-        if group == 'Whip:Monster':  # 채찍 공격에 맞을 때
-            self.hp -= 1
+        if group == 'Whip:Monster':
+            if not self.invincible:
+                self.invincible = True
+                self.invincible_timer = 2
+                self.hp -= 1
+                Boss.skr.play()
+
             if self.hp <= 0:
+                self.drop_items()
                 game_world.remove_object(self)
         if group == 'Monster:Map':
-            if other.tile_type == 'empty':
-                self.land = False
-            if other.tile_type in ['solid', 'border']:
-                #self.resolve_collision(other)
-                pass
+            pass  # 구르기나 점프 도중 타일 파괴는 이미 처리했으므로 추가 처리 없음
 
     def drop_items(self):
         Item(self.x // 80, self.y // 80, 0, 13)
-        pass
+        Boss.dead.play()
+
 
     def get_bb(self):
         return self.x - 80, self.y - 80, self.x + 80, self.y + 80
@@ -348,5 +460,8 @@ class Boss:
                 self.hp -= 3
                 self.invincible = True
                 self.invincible_timer = 2
+                Boss.skr.play()
             else:
-                pass
+                Boss.tong.play()
+        else:
+            Boss.tong.play()

@@ -131,8 +131,8 @@ class Player:
         currenttop_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y + 30)
         currentdown_tile_type = play_mode.map_obj.get_tile_type(self.x, self.y - 33)
         side_tile_type = play_mode.map_obj.get_tile_type(self.x - 80, self.y)
-        downleft_tile_type = play_mode.map_obj.get_tile_type(self.x - 24, self.y - 40)
-        downright_tile_type = play_mode.map_obj.get_tile_type(self.x + 24, self.y - 40)
+        downleft_tile_type = play_mode.map_obj.get_tile_type(self.x - 23, self.y - 35)
+        downright_tile_type = play_mode.map_obj.get_tile_type(self.x + 23, self.y - 35)
 
         if currenttop_tile_type not in ['ladder', 'rope', 'rope_head'] and currentdown_tile_type not in ['ladder', 'rope', 'rope_head']:
             self.ladder = False
@@ -148,9 +148,9 @@ class Player:
         if self.hp < 1:
             self.state_machine.start(Dead)
 
-        if self.state_machine.cur_state not in [ Climb, ClimbMove]:
+        if self.state_machine.cur_state !=  Climb and self.state_machine.cur_state != ClimbMove and self.state_machine.cur_state != Stunned:
             if downleft_tile_type == 'empty' and downright_tile_type == 'empty':
-                    self.state_machine.add_event(('floating', 0))
+                    self.state_machine.start(Jump)
 
             if downleft_tile_type in ['border', 'solid'] or downright_tile_type in ['border', 'solid']:
                     self.state_machine.add_event(('landed', 0))
@@ -284,8 +284,9 @@ class Player:
 
         elif min_overlap == overlap_top:
             enemy.take_damage(self.spishoes)
-            Player.top_coll.play()
-            self.velocity_y = 200
+            if enemy.f_size == 80:
+                Player.top_coll.play()
+            self.velocity_y = 300
 
 
     def resolve_collision(self, tile):
@@ -357,6 +358,9 @@ class Player:
         self.damage.play()
         self.invincible = True
         self.invincible_timer = 2
+
+        if monster.rolling:
+            self.state_machine.start(Stunned)
 
         if self.x < monster.x:
             self.x -= 30
@@ -430,6 +434,8 @@ class Run:
             player.dirx, player.face_dir = 1, 1
         elif left_down(e) or right_up(e):  # 왼쪽으로 RUN
             player.dirx, player.face_dir = -1, -1
+        if x_down(e):
+            player.use_bomb()
         if c_down(e):
             player.use_rope()
         player.act = 11
@@ -694,13 +700,15 @@ class Stunned:
 
     @staticmethod
     def do(player):
-        player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
+        player.frame = (player.frame + 12 * ACTION_PER_TIME * game_framework.frame_time) % player.maxframe
 
-        if get_time() - player.st_time > 5:
+        if get_time() - player.st_time > 1:
             player.state_machine.add_event(('TIME_OUT', 0))
 
     @staticmethod
     def draw(player):
+        if get_time() - player.st_time > 1:
+            player.state_machine.add_event(('TIME_OUT', 0))
         if player.face_dir == 1:
             if player.dx > 0:
                 player.image.clip_draw(0,
@@ -760,7 +768,7 @@ class Stunned:
                                    128,
                                    128,
                                    player.x - player.view_x,
-                                   player.y - player.view_y,
+                                   player.y - player.view_y + 20,
                                    50,
                                    50)
 
